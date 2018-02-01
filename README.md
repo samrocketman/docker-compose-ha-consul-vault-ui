@@ -42,6 +42,25 @@ Initialize and unseal the vault.
 
 > **Note:** the Root Token will be used to log into the Vault UI.
 
+# Troubleshooting
+
+DNS troubleshooting using `dig`.
+
+    dig @172.16.238.2 consul.service.consul
+
+DNS troubleshooting using Docker.
+
+    docker network list
+    docker run -it --dns 172.16.238.2 --network dockercomposehaconsulvaultui_internal joffotron/docker-net-tools
+
+View vault logs.
+
+    docker-compose logs vault
+
+User `docker exec` to log into container names.  It allows you to poke around
+the runtime of the container.
+
+
 # Visit the web UI
 
 - Consul: http://localhost:8500
