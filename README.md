@@ -42,6 +42,11 @@ Initialize and unseal the vault.
 
 > **Note:** the Root Token will be used to log into the Vault UI.
 
+# Visit the web UI
+
+- Consul: http://localhost:8500
+- Vault UI: http://localhost:8000/
+
 # Troubleshooting
 
 DNS troubleshooting using `dig`.
@@ -59,12 +64,6 @@ View vault logs.
 
 User `docker exec` to log into container names.  It allows you to poke around
 the runtime of the container.
-
-
-# Visit the web UI
-
-- Consul: http://localhost:8500
-- Vault UI: http://localhost:8000/
 
 # License
 
