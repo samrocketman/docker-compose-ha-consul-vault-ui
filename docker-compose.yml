@@ -89,6 +89,6 @@ services:
       - vault
     environment:
       VAULT_AUTH_DEFAULT: "TOKEN"
-      VAULT_URL_DEFAULT: "http://vault.service.consul:8200"
+      VAULT_URL_DEFAULT: "http://active.vault.service.consul:8200"
     ports:
       - "8000:8000"
