@@ -30,15 +30,26 @@ Features:
 
 # Getting started
 
-Start the services via [`docker-compose`][dc].
+> Remove `--scale vault=3` if you want to start one instance of Vault.
+> `docker-compose up -d` would bring only Consul up in HA configuration.
 
-    docker-compose up -d
+    docker-compose up --scale vault=3 -d
 
-Initialize and unseal the vault.
+Initialize Vault.
 
     docker exec -it dockercomposehaconsulvaultui_vault_1 sh
-    vault init
+    vault operator init
+
+Unseal Vault in `dockercomposehaconsulvaultui_vault_1`.
+
     for key in <unseal_key1> <unseal_key2> <unseal_key3>; do vault operator unseal "${key}"; done
+
+The `unseal_keyX` comes from the output of `vault operator init`.  You'll need
+to repeat logging into (`docker exec`) and unsealing the other two Vault
+instances.
+
+- `dockercomposehaconsulvaultui_vault_2`
+- `dockercomposehaconsulvaultui_vault_3`
 
 > **Note:** the Root Token will be used to log into the Vault UI.
 
