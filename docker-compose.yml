@@ -64,18 +64,22 @@ services:
   vault:
     <<: *container_defaults
     image: 'vault'
-    command: 'vault server -config=/vault/config'
+    #exports work around vault bug https://github.com/hashicorp/vault/issues/3866
+    #IP is the IP address of the default networking route
+    #$$ escapes in "$" in docker-compose string interpolation
+    command:
+      - "sh"
+      - "-c"
+      - >
+        export IP=$$(ip -o ro get $$(ip ro | awk '$$1 == "default" { print $$3 }') | awk '{print $$5}');
+        export VAULT_API_ADDR="http://$${IP}:8200" VAULT_CLUSTER_ADDR="https://$${IP}:8201";
+        exec vault server -config=/vault/config
     #set scale: 3 for HA configuration
     scale: 1
-    networks:
-      internal:
-        ipv4_address: 172.16.238.20
     depends_on:
       - consul-worker
     environment:
       VAULT_ADDR: 'http://127.0.0.1:8200'
-      VAULT_API_ADDR: "http://172.16.238.20:8200"
-      VAULT_CLUSTER_ADDR: "https://172.16.238.20:8201"
       VAULT_LOCAL_CONFIG: '{"backend": {"consul": {"address": "consul:8500", "path":"vault", "scheme": "http"}}, "listener": {"tcp":{"address": "0.0.0.0:8200","tls_disable":"1"}}, "default_lease_ttl": "168h", "max_lease_ttl": "720h"}'
     cap_add:
       - IPC_LOCK
