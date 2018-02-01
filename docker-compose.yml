@@ -74,7 +74,11 @@ services:
       - consul-worker
     environment:
       VAULT_ADDR: 'http://127.0.0.1:8200'
-      VAULT_LOCAL_CONFIG: '{"backend": {"consul": {"address": "consul:8500", "api_addr": "172.16.238.20", "path":"vault", "scheme": "http"}}, "listener": {"tcp":{"address": "0.0.0.0:8200","tls_disable":"1"}}, "default_lease_ttl": "168h", "max_lease_ttl": "720h", "disable_mlock": "true"}'
+      VAULT_API_ADDR: "http://172.16.238.20:8200"
+      VAULT_CLUSTER_ADDR: "https://172.16.238.20:8201"
+      VAULT_LOCAL_CONFIG: '{"backend": {"consul": {"address": "consul:8500", "path":"vault", "scheme": "http"}}, "listener": {"tcp":{"address": "0.0.0.0:8200","tls_disable":"1"}}, "default_lease_ttl": "168h", "max_lease_ttl": "720h"}'
+    cap_add:
+      - IPC_LOCK
 
 
   vault-ui:
