@@ -23,6 +23,7 @@ services:
     depends_on:
       - dnsmasq
 
+
   #create a DNS service which also forwards lookups to consul DNS
   #troubleshoot: dig @172.16.238.2 consul.service.consul
   #troubleshoot: docker run -it --dns 172.16.238.2 --network vaultconsului_internal joffotron/docker-net-tools
