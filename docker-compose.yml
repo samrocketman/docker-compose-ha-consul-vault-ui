@@ -1,0 +1,90 @@
+version: '2.2'
+
+
+#define internal docker networks for container connectivity
+networks:
+  internal:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.238.0/24
+
+
+#define docker containers as services
+services:
+  container_defaults: &container_defaults
+    image: 'consul'
+    scale: 0
+    networks:
+      - 'internal'
+    dns: '172.16.238.2'
+    init: true
+    depends_on:
+      - dnsmasq
+
+  #create a DNS service which also forwards lookups to consul DNS
+  #troubleshoot: dig @127.0.0.1 -p 9000 consul.service.consul
+  #troubleshoot: docker run -it --dns 172.16.238.2 --network vaultconsului_internal joffotron/docker-net-tools
+  dnsmasq:
+    image: storytel/dnsmasq
+    command: 'dnsmasq --no-daemon --server=/consul/172.16.238.3#8600'
+    init: true
+    ports:
+      - '9000:53/udp'
+    networks:
+      internal:
+        ipv4_address: 172.16.238.2
+    cap_add:
+      - NET_ADMIN
+
+
+  consul:
+    <<: *container_defaults
+    command: 'agent -server -bootstrap-expect 3 -disable-host-node-id -client 0.0.0.0 -ui'
+    scale: 1
+    networks:
+      internal:
+        ipv4_address: 172.16.238.3
+    ports:
+      - '8400:8400'
+      - '8500:8500'
+      - '8600:8600/udp'
+
+
+  consul-worker:
+    <<: *container_defaults
+    user: root
+    command: 'agent -server -join consul -disable-host-node-id -client 0.0.0.0 -ui'
+    scale: 2
+    depends_on:
+      - consul
+
+
+  vault:
+    <<: *container_defaults
+    image: 'vault'
+    command: 'vault server -config=/vault/config'
+    #set scale: 3 for HA configuration
+    scale: 1
+    networks:
+      internal:
+        ipv4_address: 172.16.238.20
+    depends_on:
+      - consul-worker
+    environment:
+      VAULT_ADDR: 'http://127.0.0.1:8200'
+      VAULT_LOCAL_CONFIG: '{"backend": {"consul": {"address": "consul:8500", "api_addr": "172.16.238.20", "path":"vault", "scheme": "http"}}, "listener": {"tcp":{"address": "0.0.0.0:8200","tls_disable":"1"}}, "default_lease_ttl": "168h", "max_lease_ttl": "720h", "disable_mlock": "true"}'
+
+
+  vault-ui:
+    <<: *container_defaults
+    image: 'djenriquez/vault-ui'
+    scale: 1
+    depends_on:
+      - vault
+    environment:
+      VAULT_AUTH_DEFAULT: "TOKEN"
+      VAULT_URL_DEFAULT: "http://vault.service.consul:8200"
+    ports:
+      - "8000:8000"
