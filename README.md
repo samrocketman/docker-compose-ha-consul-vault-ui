@@ -37,19 +37,19 @@ Features:
 
 Initialize Vault.
 
-    docker exec -it dockercomposehaconsulvaultui_vault_1 sh
+    docker-compose exec vault sh
     vault operator init
 
-Unseal Vault in `dockercomposehaconsulvaultui_vault_1`.
+Unseal Vault:
 
     for key in <unseal_key1> <unseal_key2> <unseal_key3>; do vault operator unseal "${key}"; done
 
 The `unseal_keyX` comes from the output of `vault operator init`.  You'll need
-to repeat logging into (`docker exec`) and unsealing the other two Vault
+to repeat logging into (`docker-compose exec`) and unsealing the other two Vault
 instances.
 
-- `dockercomposehaconsulvaultui_vault_2`
-- `dockercomposehaconsulvaultui_vault_3`
+- `docker-compose exec --index=2 vault`
+- `docker-compose exec --index=3 vault`
 
 > **Note:** the Root Token will be used to log into the Vault UI.
 
@@ -60,14 +60,22 @@ instances.
 
 # Troubleshooting
 
-DNS troubleshooting using `dig`.
-
-    dig @172.16.238.2 consul.service.consul
 
 DNS troubleshooting using Docker.
 
-    docker network list
-    docker run -it --dns 172.16.238.2 --network dockercomposehaconsulvaultui_internal joffotron/docker-net-tools
+    docker-compose run dns-troubleshoot
+
+Using the `dig` command inside of the container.
+
+    # rely on the internal container DNS
+    dig consul.service.consul
+
+    # specify the dnsmasq hostname as the DNS server
+    dig @dnsmasq vault.service.consul
+
+    # reference vault DNS by tags
+    dig active.vault.service.consul
+    dig standby.vault.service.consul
 
 View vault logs.
 
