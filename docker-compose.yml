@@ -26,7 +26,9 @@ services:
       - NET_ADMIN
     hostname: dnsmasq
     networks:
-      - internal
+      internal:
+        ipv4_address: 172.16.238.2
+
 
 
   dns-troubleshoot:
@@ -35,7 +37,7 @@ services:
     scale: 0
     networks:
       - internal
-    dns: dnsmasq
+    dns: 172.16.238.2
     depends_on:
       - dnsmasq
 
@@ -51,7 +53,7 @@ services:
       - '8600:8600/udp'
     networks:
       - internal
-    dns: dnsmasq
+    dns: 172.16.238.2
     depends_on:
       - dnsmasq
 
@@ -64,7 +66,7 @@ services:
     scale: 2
     networks:
       - internal
-    dns: dnsmasq
+    dns: 172.16.238.2
     depends_on:
       - consul
 
@@ -91,7 +93,7 @@ services:
       - IPC_LOCK
     networks:
       - internal
-    dns: dnsmasq
+    dns: 172.16.238.2
     depends_on:
       - consul-worker
 
@@ -107,6 +109,6 @@ services:
       - "8000:8000"
     networks:
       - internal
-    dns: dnsmasq
+    dns: 172.16.238.2
     depends_on:
       - vault
