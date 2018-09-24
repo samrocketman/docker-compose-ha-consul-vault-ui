@@ -92,7 +92,7 @@ the runtime of the container.
 
 Run a [SOCKS5 proxy][socks] for use with your browser.
 
-    docker run --network 5a0ed13c84aa --dns 172.16.238.2 --init -p 127.0.0.1:1080:1080 serjs/go-socks5-proxy
+    docker run --network docker-compose-ha-consul-vault-ui_internal --dns 172.16.238.2 --init -p 127.0.0.1:1080:1080 --rm serjs/go-socks5-proxy
 
 Configure your browser to use SOCKS proxy at `127.0.0.1:1080`.
 
