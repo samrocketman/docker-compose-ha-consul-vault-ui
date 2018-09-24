@@ -60,6 +60,8 @@ instances.
 
 # Troubleshooting
 
+### DNS
+
 
 DNS troubleshooting using Docker.
 
@@ -77,12 +79,22 @@ Using the `dig` command inside of the container.
     dig active.vault.service.consul
     dig standby.vault.service.consul
 
+### Logs
+
 View vault logs.
 
     docker-compose logs vault
 
 User `docker exec` to log into container names.  It allows you to poke around
 the runtime of the container.
+
+### SOCKS5 proxy
+
+Run a [SOCKS5 proxy][socks] for use with your browser.
+
+    docker run --network 5a0ed13c84aa --dns 172.16.238.2 --init -p 127.0.0.1:1080:1080 serjs/go-socks5-proxy
+
+Configure your browser to use SOCKS proxy at `127.0.0.1:1080`.
 
 # License
 
@@ -91,5 +103,6 @@ the runtime of the container.
 [c]: https://www.consul.io/
 [d]: https://www.docker.com/
 [dc]: https://docs.docker.com/compose/
+[socks]: https://github.com/serjs/socks5-server
 [ui]: https://github.com/djenriquez/vault-ui
 [v]: https://www.vaultproject.io/
