@@ -171,3 +171,15 @@ services:
         chown -R consul. /consul
         su - -s /bin/sh consul -c /bin/sh -c 'nohup consul agent -join consul -config-dir=/consul/config -data-dir=/consul/data &'
         exec /app/bin/entrypoint.sh start_app
+
+
+  socks:
+    image: serjs/go-socks5-proxy
+    init: true
+    ports:
+      - "1080:1080"
+    networks:
+      - internal
+    dns: 172.16.238.2
+    depends_on:
+      - dnsmasq
