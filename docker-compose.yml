@@ -36,18 +36,16 @@ services:
             unzip consul_1.2.3_linux_amd64.zip
             chmod 755 consul
             rm consul_1.2.3_linux_amd64.zip
-            wget -O- https://releases.hashicorp.com/consul-template/0.19.5/consul-template_0.19.5_linux_amd64.tgz | tar -xz
+            curl -L https://releases.hashicorp.com/consul-template/0.19.5/consul-template_0.19.5_linux_amd64.tgz | tar -xz
           )
-          chown -R consul. /consul
         )
+        chown -R consul. /consul
         su - -s /bin/sh consul -c /bin/sh -c 'nohup consul agent -join consul -config-dir=/consul/config -data-dir=/consul/data &'
         # consul-template will automatically update dnsmasq configuration and
         # restart the service based on available consul cluster DNS servers
         echo '{{range service "consul"}}server=/consul.service.consul/{{.Address}}#8600' >> /consul/consul-dns.tpl
         echo '{{end}}' >> /consul/consul-dns.tpl
-        nohup /bin/sh -c 'while true; do consul-template -template=/consul/consul-dns.tpl:/etc/dnsmasq/consul.conf:"/usr/bin/killall dnsmasq" -retry 1s; sleep 5; done' &
-        nohup consul-template -template=/tmp/consul-dns.tpl:/etc/dnsmasq/consul.conf:"/usr/bin/killall dnsmasq" &
-        until [ -f /etc/dnsmasq/consul.conf ]; do sleep 1; done
+        nohup /bin/sh -c 'sleep 30; while true; do consul-template -template=/consul/consul-dns.tpl:/etc/dnsmasq/consul.conf:"/usr/bin/killall dnsmasq" -retry 30s; sleep 5; done' &
         # end consul-template template
         set +e
         while true; do
@@ -167,9 +165,9 @@ services:
             unzip consul_1.2.3_linux_amd64.zip
             chmod 755 consul
             rm consul_1.2.3_linux_amd64.zip
-            wget -O- https://releases.hashicorp.com/consul-template/0.19.5/consul-template_0.19.5_linux_amd64.tgz | tar -xz
+            curl -L https://releases.hashicorp.com/consul-template/0.19.5/consul-template_0.19.5_linux_amd64.tgz | tar -xz
           )
-          chown -R consul. /consul
         )
+        chown -R consul. /consul
         su - -s /bin/sh consul -c /bin/sh -c 'nohup consul agent -join consul -config-dir=/consul/config -data-dir=/consul/data &'
         exec /app/bin/entrypoint.sh start_app
