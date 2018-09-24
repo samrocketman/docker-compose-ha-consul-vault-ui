@@ -18,7 +18,10 @@ services for provisioning via [Docker Compose][dc].
 Features:
 
 - dnsmasq makes Consul DNS available to all containers.
-- Vault is registered via service discovery which is exposed via Consul DNS.
+- consul-template updates dnsmasq configuration and restarts dnsmasq.  This
+  makes consul DNS lookups HA.
+- Vault and Vault UI is registered via service discovery which is exposed via
+  Consul DNS.
 - Vault UI makes use of Consul DNS to log into Vault.  This means Vault UI does
   not necessarily need to know where Vault is because Consul service discovery
   takes care of that.
@@ -55,8 +58,18 @@ instances.
 
 # Visit the web UI
 
-- Consul: http://localhost:8500
-- Vault UI: http://localhost:8000/
+In order to properly utilize consul DNS, your browser must be configured to use
+the SOCKS5 proxy listening on `127.0.0.1:1080`.
+
+- Consul: `http://consul.service.consul:8500/` (also available on
+  `http://localhost:8500/`)
+- Vault UI: `http://vault-ui.service.consul:8000/` (also available on
+  `http://localhost:8000/`)
+
+# Experiment
+
+With HA enabled, container instances of consul and vault can be terminated with
+minor disruptions.
 
 # Troubleshooting
 
