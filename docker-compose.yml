@@ -10,7 +10,6 @@ networks:
       config:
         - subnet: 172.16.238.0/24
 
-
 #define docker containers as services
 services:
   #create a DNS service which also forwards lookups to consul DNS
@@ -111,3 +110,28 @@ services:
     dns: 172.16.238.2
     depends_on:
       - vault
+    entrypoint: ""
+    command:
+      - /bin/sh
+      - -c
+      - |
+        # this command will automatically register the vault UI app as a consul service
+        set -ex
+        [ -d /consul ] || (
+          apk update
+          apk add curl
+          mkdir -p /consul/bin /consul/home /consul/config /consul/data
+          echo '{"service": {"name": "vault-ui", "tags": [], "port": 8000}}' > /consul/config/vault-ui.json
+          addgroup -g 8000 -S consul
+          adduser -u 8000 -G consul -h /consul -S consul
+          (
+            cd /consul/bin
+            curl -LO https://releases.hashicorp.com/consul/1.2.3/consul_1.2.3_linux_amd64.zip
+            echo 'f97996296ef3905c38c504b35035fb731d3cfd9cad129c9523402a4229c709c5  consul_1.2.3_linux_amd64.zip' | sha256sum -c -
+            unzip consul_1.2.3_linux_amd64.zip
+            chmod 755 consul
+          )
+          chown -R consul. /consul
+        )
+        nohup su - -s /bin/sh consul -c /bin/sh -c 'nohup /consul/bin/consul agent -join consul.service.consul -config-dir=/consul/config -data-dir=/consul/data &'
+        exec /app/bin/entrypoint.sh start_app
