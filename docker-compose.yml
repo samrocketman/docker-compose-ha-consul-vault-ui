@@ -18,7 +18,14 @@ services:
   dnsmasq:
     image: storytel/dnsmasq
     init: true
-    command: 'dnsmasq --no-daemon --server=/consul/consul-worker/172.16.238.3#8600'
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -ex
+        while true; do
+          dnsmasq --no-daemon --server=/consul/consul-worker/172.16.238.3#8600 --log-queries
+        done
     ports:
       - '9000:53/udp'
     cap_add:
