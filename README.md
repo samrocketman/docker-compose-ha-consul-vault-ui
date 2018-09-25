@@ -79,7 +79,12 @@ With HA enabled, container instances of consul and vault can be terminated with
 minor disruptions.
 
 Consul can be scaled up on the fly.  `consul-template` will automatically update
-dnsmasq to include new services.
+dnsmasq to include new services.  dnsmasq will experience zero downtime.
+
+    docker-compose up --scale vault=3 --scale consul-worker=6 -d
+
+To play with failover for killing consul instances, it is recommended to review
+[fault tolerance for consul HA deployments][ft].
 
 # Troubleshooting
 
@@ -126,6 +131,7 @@ Configure your browser to use SOCKS proxy at `127.0.0.1:1080`.
 [c]: https://www.consul.io/
 [d]: https://www.docker.com/
 [dc]: https://docs.docker.com/compose/
+[ft]: https://www.consul.io/docs/internals/consensus.html#deployment-table
 [socks]: https://github.com/serjs/socks5-server
 [ui]: https://github.com/djenriquez/vault-ui
 [v]: https://www.vaultproject.io/
