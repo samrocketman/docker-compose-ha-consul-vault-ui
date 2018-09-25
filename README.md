@@ -31,6 +31,10 @@ Features:
 * [Docker][d]
 * [Docker Compose][dc]
 
+Supplemental reading material:
+
+* [Hitchhiker's guide to administering Vault](vault-for-humans.md)
+
 # Getting started
 
 > Remove `--scale vault=3` if you want to start one instance of Vault.
