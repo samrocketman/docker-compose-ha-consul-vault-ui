@@ -61,15 +61,16 @@ instances.
 In order to properly utilize consul DNS, your browser must be configured to use
 the SOCKS5 proxy listening on `127.0.0.1:1080`.
 
-- Consul: `http://consul.service.consul:8500/` (also available on
-  `http://localhost:8500/`)
-- Vault UI: `http://vault-ui.service.consul:8000/` (also available on
-  `http://localhost:8000/`)
+- Consul UI: `http://consul.service.consul:8500/`
+- Vault UI: `http://vault-ui.service.consul:8000/`
 
 # Experiment
 
 With HA enabled, container instances of consul and vault can be terminated with
 minor disruptions.
+
+Consul can be scaled up on the fly.  `consul-template` will automatically update
+dnsmasq to include new services.
 
 # Troubleshooting
 

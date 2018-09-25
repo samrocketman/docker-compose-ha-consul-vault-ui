@@ -76,10 +76,6 @@ services:
     healthcheck:
       test: ['CMD', '/bin/sh', '-c', 'curl -sfLo /dev/null http://127.0.0.1:8500/v1/health/node/$$HOSTNAME']
     scale: 1
-    ports:
-      - '8400:8400'
-      - '8500:8500'
-      - '8600:8600/udp'
     networks:
       - internal
     dns: 172.16.238.2
@@ -144,8 +140,6 @@ services:
     environment:
       VAULT_AUTH_DEFAULT: "TOKEN"
       VAULT_URL_DEFAULT: "http://active.vault.service.consul:8200"
-    ports:
-      - "8000:8000"
     networks:
       - internal
     dns: 172.16.238.2
