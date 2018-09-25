@@ -21,23 +21,36 @@ services:
       - -c
       - |
         set -ex
-        [ -d /consul ] || (
-          apk update
-          apk add curl
-          mkdir -p /consul/config /consul/data
-          echo '{"service": {"name": "dnsmasq", "tags": [], "port": 53}}' > /consul/config/dnsmasq.json
-          addgroup -g 8000 -S consul
-          adduser -u 8000 -G consul -h /consul -S consul
-          (
-            cd /usr/local/bin
-            curl -LO https://releases.hashicorp.com/consul/1.2.3/consul_1.2.3_linux_amd64.zip
-            echo 'f97996296ef3905c38c504b35035fb731d3cfd9cad129c9523402a4229c709c5  consul_1.2.3_linux_amd64.zip' | sha256sum -c -
-            unzip consul_1.2.3_linux_amd64.zip
-            chmod 755 consul
-            rm consul_1.2.3_linux_amd64.zip
-            curl -L https://releases.hashicorp.com/consul-template/0.19.5/consul-template_0.19.5_linux_amd64.tgz | tar -xz
-          )
+        [ -d /consul ] || mkdir -p /consul/config /consul/data
+        [ -f /consul/config/dnsmasq.json ] || echo '{"service": {"name": "dnsmasq", "tags": [], "port": 53}}' > /consul/config/dnsmasq.json
+        type -p curl || (
+          until apk update; do sleep 3; done
+          until apk add curl; do sleep 3; done
         )
+        grep consul /etc/group || addgroup -g 8000 -S consul
+        grep consul /etc/passwd || adduser -u 8000 -G consul -h /consul -S consul
+        type -p consul || (
+          cd /usr/local/bin
+          until echo 'f97996296ef3905c38c504b35035fb731d3cfd9cad129c9523402a4229c709c5  consul_1.2.3_linux_amd64.zip' | sha256sum -c -; do
+            curl -LO https://releases.hashicorp.com/consul/1.2.3/consul_1.2.3_linux_amd64.zip
+            sleep 3
+            rm consul_1.2.3_linux_amd64.zip
+          done
+          unzip consul_1.2.3_linux_amd64.zip
+          chmod 755 consul
+          rm consul_1.2.3_linux_amd64.zip
+        )
+        type -p consul-template || (
+          cd /usr/local/bin
+          until curl -L https://releases.hashicorp.com/consul-template/0.19.5/consul-template_0.19.5_linux_amd64.tgz | tar -xz; do
+            sleep 3
+          done
+        )
+
+
+
+
+
         chown -R consul. /consul
         su - -s /bin/sh consul -c /bin/sh -c 'nohup consul agent -join consul -config-dir=/consul/config -data-dir=/consul/data &'
         # consul-template will automatically update dnsmasq configuration and
@@ -170,22 +183,30 @@ services:
       - |
         # this command will automatically register the vault UI app as a consul service
         set -ex
-        [ -d /consul ] || (
+        [ -d /consul ] || mkdir -p /consul/config /consul/data
+        [ -f /consul/config/vault-ui.json ] || echo '{"service": {"name": "vault-ui", "tags": [], "port": 8000}}' > /consul/config/vault-ui.json
+        type -p curl || (
           until apk update; do sleep 3; done
           until apk add curl; do sleep 3; done
-          mkdir -p /consul/bin /consul/home /consul/config /consul/data
-          echo '{"service": {"name": "vault-ui", "tags": [], "port": 8000}}' > /consul/config/vault-ui.json
-          addgroup -g 8000 -S consul
-          adduser -u 8000 -G consul -h /consul -S consul
-          (
-            cd /usr/local/bin
+        )
+        grep consul /etc/group || addgroup -g 8000 -S consul
+        grep consul /etc/passwd || adduser -u 8000 -G consul -h /consul -S consul
+        type -p consul || (
+          cd /usr/local/bin
+          until echo 'f97996296ef3905c38c504b35035fb731d3cfd9cad129c9523402a4229c709c5  consul_1.2.3_linux_amd64.zip' | sha256sum -c -; do
             curl -LO https://releases.hashicorp.com/consul/1.2.3/consul_1.2.3_linux_amd64.zip
-            echo 'f97996296ef3905c38c504b35035fb731d3cfd9cad129c9523402a4229c709c5  consul_1.2.3_linux_amd64.zip' | sha256sum -c -
-            unzip consul_1.2.3_linux_amd64.zip
-            chmod 755 consul
+            sleep 3
             rm consul_1.2.3_linux_amd64.zip
-            curl -L https://releases.hashicorp.com/consul-template/0.19.5/consul-template_0.19.5_linux_amd64.tgz | tar -xz
-          )
+          done
+          unzip consul_1.2.3_linux_amd64.zip
+          chmod 755 consul
+          rm consul_1.2.3_linux_amd64.zip
+        )
+        type -p consul-template || (
+          cd /usr/local/bin
+          until curl -L https://releases.hashicorp.com/consul-template/0.19.5/consul-template_0.19.5_linux_amd64.tgz | tar -xz; do
+            sleep 3
+          done
         )
         chown -R consul. /consul
         su - -s /bin/sh consul -c /bin/sh -c 'nohup consul agent -join consul -config-dir=/consul/config -data-dir=/consul/data &'
