@@ -73,6 +73,8 @@ services:
     image: 'consul'
     init: true
     command: 'agent -server -bootstrap-expect 1 -disable-host-node-id -client 0.0.0.0 -ui'
+    healthcheck:
+      test: ['CMD', '/bin/sh', '-c', 'curl -sfLo /dev/null http://127.0.0.1:8500/v1/health/node/$$HOSTNAME']
     scale: 1
     ports:
       - '8400:8400'
@@ -88,13 +90,23 @@ services:
   consul-worker:
     image: 'consul'
     init: true
-    command: 'agent -server -join consul.service.consul -disable-host-node-id -client 0.0.0.0 -ui'
+    entrypoint: ''
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -ex
+        until apk update; do sleep 3; done
+        until apk add bind-tools; do sleep 3; done
+        until dig +short consul.service.consul; do sleep 1; done
+        docker-entrypoint.sh agent -server -join consul.service.consul -disable-host-node-id -client 0.0.0.0 -ui
     scale: 2
     networks:
       - internal
     dns: 172.16.238.2
     depends_on:
-      - consul
+      consul:
+        condition: service_healthy
 
 
   vault:
@@ -147,8 +159,8 @@ services:
         # this command will automatically register the vault UI app as a consul service
         set -ex
         [ -d /consul ] || (
-          apk update
-          apk add curl
+          until apk update; do sleep 3; done
+          until apk add curl; do sleep 3; done
           mkdir -p /consul/bin /consul/home /consul/config /consul/data
           echo '{"service": {"name": "vault-ui", "tags": [], "port": 8000}}' > /consul/config/vault-ui.json
           addgroup -g 8000 -S consul
