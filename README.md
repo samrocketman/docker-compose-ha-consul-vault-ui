@@ -17,7 +17,12 @@ services for provisioning via [Docker Compose][dc].
 
 Features:
 
-- dnsmasq makes Consul DNS available to all containers.
+- dnsmasq makes Consul DNS available to all containers.  A secondary dnsmasq
+  server is provided which grants HA to the DNS available to all containers.
+  This allows consul-template to update DNS with zero DNS downtime.
+  consul-template will create a lock to ensure it is not possible for both
+  primary and secondary DNS servers to be down during a DNS configuration
+  updates as part of service discovery.
 - consul-template updates dnsmasq configuration and restarts dnsmasq.  This
   makes consul DNS lookups HA.
 - Vault and Vault UI is registered via service discovery which is exposed via

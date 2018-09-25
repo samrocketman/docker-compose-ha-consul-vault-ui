@@ -13,7 +13,7 @@ networks:
 #define docker containers as services
 services:
   #create a DNS service which also forwards lookups to consul DNS
-  dnsmasq:
+  dnsmasq: &dnsmasq
     image: storytel/dnsmasq
     init: true
     command:
@@ -25,6 +25,7 @@ services:
           apk update
           apk add curl
           mkdir -p /consul/config /consul/data
+          echo '{"service": {"name": "dnsmasq", "tags": [], "port": 53}}' > /consul/config/dnsmasq.json
           addgroup -g 8000 -S consul
           adduser -u 8000 -G consul -h /consul -S consul
           (
@@ -43,7 +44,7 @@ services:
         # restart the service based on available consul cluster DNS servers
         echo '{{range service "consul"}}server=/consul.service.consul/{{.Address}}#8600' >> /consul/consul-dns.tpl
         echo '{{end}}' >> /consul/consul-dns.tpl
-        nohup /bin/sh -c 'sleep 30; while true; do consul-template -template=/consul/consul-dns.tpl:/etc/dnsmasq/consul.conf:"/usr/bin/killall dnsmasq" -retry 30s; sleep 5; done' &
+        nohup /bin/sh -c 'sleep 30; while true; do consul-template -template=/consul/consul-dns.tpl:/etc/dnsmasq/consul.conf:"consul lock -name service/dnsmasq -shell reload killall dnsmasq" -retry 30s; sleep 5; done' &
         # end consul-template template
         set +e
         while true; do
@@ -58,13 +59,22 @@ services:
         ipv4_address: 172.16.238.2
 
 
+  dnsmasq-secondary:
+    <<: *dnsmasq
+    networks:
+      internal:
+        ipv4_address: 172.16.238.3
+
+
   dns-troubleshoot:
     image: joffotron/docker-net-tools
     init: true
     scale: 0
     networks:
       - internal
-    dns: 172.16.238.2
+    dns:
+      - 172.16.238.2
+      - 172.16.238.3
     depends_on:
       - dnsmasq
 
@@ -78,7 +88,9 @@ services:
     scale: 1
     networks:
       - internal
-    dns: 172.16.238.2
+    dns:
+      - 172.16.238.2
+      - 172.16.238.3
     depends_on:
       - dnsmasq
 
@@ -99,7 +111,9 @@ services:
     scale: 2
     networks:
       - internal
-    dns: 172.16.238.2
+    dns:
+      - 172.16.238.2
+      - 172.16.238.3
     depends_on:
       consul:
         condition: service_healthy
@@ -128,7 +142,9 @@ services:
       - IPC_LOCK
     networks:
       - internal
-    dns: 172.16.238.2
+    dns:
+      - 172.16.238.2
+      - 172.16.238.3
     depends_on:
       - consul-worker
 
@@ -142,7 +158,9 @@ services:
       VAULT_URL_DEFAULT: "http://active.vault.service.consul:8200"
     networks:
       - internal
-    dns: 172.16.238.2
+    dns:
+      - 172.16.238.2
+      - 172.16.238.3
     depends_on:
       - vault
     entrypoint: ""
@@ -181,6 +199,8 @@ services:
       - "1080:1080"
     networks:
       - internal
-    dns: 172.16.238.2
+    dns:
+      - 172.16.238.2
+      - 172.16.238.3
     depends_on:
       - dnsmasq
