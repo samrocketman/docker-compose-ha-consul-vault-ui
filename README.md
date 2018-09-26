@@ -90,8 +90,11 @@ To play with failover for killing consul instances, it is recommended to review
 
 ### DNS
 
+Currently, output from the `dnsmasq` and `dnsmasq-secondary` servers are
+minimal.  Verbosity of output can be increased for troubleshooting.  Edit
+`docker-compose.yml` and add `--log-queries` to the dnsmasq command.
 
-DNS troubleshooting using Docker.
+DNS client troubleshooting using Docker.
 
     docker-compose run dns-troubleshoot
 

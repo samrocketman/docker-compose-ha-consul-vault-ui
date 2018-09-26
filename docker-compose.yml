@@ -10,6 +10,7 @@ networks:
       config:
         - subnet: 172.16.238.0/24
 
+
 #define docker containers as services
 services:
   #create a DNS service which also forwards lookups to consul DNS
@@ -25,7 +26,7 @@ services:
         [ -f /consul/config/dnsmasq.json ] || echo '{"service": {"name": "dnsmasq", "tags": [], "port": 53}}' > /consul/config/dnsmasq.json
         type -p curl || (
           until apk update; do sleep 3; done
-          until apk add curl; do sleep 3; done
+          until apk add curl bind-tools; do sleep 3; done
         )
         grep consul /etc/group || addgroup -g 8000 -S consul
         grep consul /etc/passwd || adduser -u 8000 -G consul -h /consul -S consul
@@ -34,7 +35,6 @@ services:
           until echo 'f97996296ef3905c38c504b35035fb731d3cfd9cad129c9523402a4229c709c5  consul_1.2.3_linux_amd64.zip' | sha256sum -c -; do
             curl -LO https://releases.hashicorp.com/consul/1.2.3/consul_1.2.3_linux_amd64.zip
             sleep 3
-            rm consul_1.2.3_linux_amd64.zip
           done
           unzip consul_1.2.3_linux_amd64.zip
           chmod 755 consul
@@ -46,11 +46,6 @@ services:
             sleep 3
           done
         )
-
-
-
-
-
         chown -R consul. /consul
         su - -s /bin/sh consul -c /bin/sh -c 'nohup consul agent -join consul -config-dir=/consul/config -data-dir=/consul/data &'
         # consul-template will automatically update dnsmasq configuration and
@@ -62,8 +57,9 @@ services:
         set +e
         while true; do
           sleep 1
+          CONSUL_IP="`dig +short consul | tail -n1`"
           # add --log-queries for more verbosity
-          dnsmasq --no-daemon --server=/consul/consul-worker/172.16.238.3#8600
+          dnsmasq --no-daemon --server=/consul/"$${CONSUL_IP}"#8600
         done
     cap_add:
       - NET_ADMIN
@@ -196,7 +192,6 @@ services:
           until echo 'f97996296ef3905c38c504b35035fb731d3cfd9cad129c9523402a4229c709c5  consul_1.2.3_linux_amd64.zip' | sha256sum -c -; do
             curl -LO https://releases.hashicorp.com/consul/1.2.3/consul_1.2.3_linux_amd64.zip
             sleep 3
-            rm consul_1.2.3_linux_amd64.zip
           done
           unzip consul_1.2.3_linux_amd64.zip
           chmod 755 consul
