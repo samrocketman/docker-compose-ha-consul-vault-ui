@@ -21,10 +21,11 @@ Features:
   server is provided which grants HA to the DNS available to all containers.
   This allows consul-template to update DNS with zero DNS downtime.
   consul-template will create a lock to ensure it is not possible for both
-  primary and secondary DNS servers to be down during a DNS configuration
-  updates as part of service discovery.
-- consul-template updates dnsmasq configuration and restarts dnsmasq.  This
-  makes consul DNS lookups HA.
+  primary and secondary DNS servers to be down during DNS configuration updates
+  as part of service discovery.
+- consul-template updates dnsmasq configuration and restarts dnsmasq when the
+  configuration has changed (e.g. consul cluster size is increased on the fly).
+  This makes consul DNS lookups HA.
 - Vault and Vault UI is registered via service discovery which is exposed via
   Consul DNS.
 - Vault UI makes use of Consul DNS to log into Vault.  This means Vault UI does
