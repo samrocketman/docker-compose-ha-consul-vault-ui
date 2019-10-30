@@ -146,7 +146,25 @@ services:
     scale: 1
     environment:
       VAULT_ADDR: 'http://127.0.0.1:8200'
-      VAULT_LOCAL_CONFIG: '{"backend": {"consul": {"address": "consul:8500", "path":"vault", "scheme": "http"}}, "listener": {"tcp":{"address": "0.0.0.0:8200","tls_disable":"1"}}, "default_lease_ttl": "168h", "max_lease_ttl": "720h"}'
+      VAULT_LOCAL_CONFIG: >-
+        {
+            "ui": true,
+            "backend": {
+                "consul": {
+                    "address": "consul:8500",
+                    "path": "vault",
+                    "scheme": "http"
+                }
+            },
+            "default_lease_ttl": "168h",
+            "listener": {
+                "tcp": {
+                    "address": "0.0.0.0:8200",
+                    "tls_disable": "1"
+                }
+            },
+            "max_lease_ttl": "720h"
+        }
     cap_add:
       - IPC_LOCK
     networks:
