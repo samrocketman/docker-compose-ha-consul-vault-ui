@@ -72,7 +72,8 @@ In order to properly utilize consul DNS, your browser must be configured to use
 the SOCKS5 proxy listening on `127.0.0.1:1080`.
 
 - Consul UI: `http://consul.service.consul:8500/`
-- Vault UI: `http://vault-ui.service.consul:8000/`
+- Vault UI (3rd party): `http://vault-ui.service.consul:8000/`
+- Vault UI (native): `http://active.vault.service.consul:8200/`
 
 # Experiment
 
