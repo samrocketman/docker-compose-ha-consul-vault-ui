@@ -22,37 +22,15 @@ services:
       - -c
       - |
         set -ex
-        [ -d /consul ] || mkdir -p /consul/config /consul/data
-        [ -f /consul/config/dnsmasq.json ] || echo '{"service": {"name": "dnsmasq", "tags": [], "port": 53}}' > /consul/config/dnsmasq.json
         type -p curl || (
           until apk update; do sleep 3; done
           until apk add curl bind-tools; do sleep 3; done
         )
-        grep consul /etc/group || addgroup -g 8000 -S consul
-        grep consul /etc/passwd || adduser -u 8000 -G consul -h /consul -S consul
-        type -p consul || (
-          cd /usr/local/bin
-          until echo 'f97996296ef3905c38c504b35035fb731d3cfd9cad129c9523402a4229c709c5  consul_1.2.3_linux_amd64.zip' | sha256sum -c -; do
-            curl -LO https://releases.hashicorp.com/consul/1.2.3/consul_1.2.3_linux_amd64.zip
-            sleep 3
-          done
-          unzip consul_1.2.3_linux_amd64.zip
-          chmod 755 consul
-          rm consul_1.2.3_linux_amd64.zip
-        )
-        type -p consul-template || (
-          cd /usr/local/bin
-          until curl -L https://releases.hashicorp.com/consul-template/0.19.5/consul-template_0.19.5_linux_amd64.tgz | tar -xz; do
-            sleep 3
-          done
-        )
-        chown -R consul. /consul
-        su - -s /bin/sh consul -c /bin/sh -c 'nohup consul agent -join consul -config-dir=/consul/config -data-dir=/consul/data &'
-        # consul-template will automatically update dnsmasq configuration and
-        # restart the service based on available consul cluster DNS servers
-        echo '{{range service "consul"}}server=/consul.service.consul/{{.Address}}#8600' >> /consul/consul-dns.tpl
-        echo '{{end}}' >> /consul/consul-dns.tpl
-        nohup /bin/sh -c 'sleep 30; while true; do consul-template -template=/consul/consul-dns.tpl:/etc/dnsmasq/consul.conf:"consul lock -name service/dnsmasq -shell reload killall dnsmasq" -retry 30s; sleep 5; done' &
+
+        echo '{{range service "consul"}}server=/consul.service.consul/{{.Address}}#8600' >> /tmp/dnsmasq.tpl
+        echo '{{end}}' >> /tmp/dnsmasq.tpl
+        consul-agent.sh --service '{"service": {"name": "dnsmasq", "tags": [], "port": 53}}' \
+          --consul-template-file-cmd /tmp/dnsmasq.tpl dnsmasql.tpl /etc/dnsmasq/consul.conf "consul lock -name service/dnsmasq -shell killall dnsmasq"
         # end consul-template template
         set +e
         while true; do
@@ -61,6 +39,11 @@ services:
           # add --log-queries for more verbosity
           dnsmasq --no-daemon --server=/consul/"$${CONSUL_IP}"#8600
         done
+    volumes:
+      - ./consul-template:/usr/local/bin/consul-template
+      - ./consul:/usr/local/bin/consul
+      - ./jq:/usr/local/bin/jq
+      - ./scripts/consul-agent.sh:/bin/consul-agent.sh
     cap_add:
       - NET_ADMIN
     networks:
@@ -191,39 +174,54 @@ services:
     depends_on:
       - vault
     entrypoint: ""
+    volumes:
+      - ./consul-template:/usr/local/bin/consul-template
+      - ./consul:/usr/local/bin/consul
+      - ./jq:/usr/local/bin/jq
+      - ./scripts/consul-agent.sh:/bin/consul-agent.sh
     command:
       - /bin/sh
       - -c
       - |
         # this command will automatically register the vault UI app as a consul service
         set -ex
-        [ -d /consul ] || mkdir -p /consul/config /consul/data
-        [ -f /consul/config/vault-ui.json ] || echo '{"service": {"name": "vault-ui", "tags": [], "port": 8000}}' > /consul/config/vault-ui.json
         type -p curl || (
           until apk update; do sleep 3; done
           until apk add curl; do sleep 3; done
         )
-        grep consul /etc/group || addgroup -g 8000 -S consul
-        grep consul /etc/passwd || adduser -u 8000 -G consul -h /consul -S consul
-        type -p consul || (
-          cd /usr/local/bin
-          until echo 'f97996296ef3905c38c504b35035fb731d3cfd9cad129c9523402a4229c709c5  consul_1.2.3_linux_amd64.zip' | sha256sum -c -; do
-            curl -LO https://releases.hashicorp.com/consul/1.2.3/consul_1.2.3_linux_amd64.zip
-            sleep 3
-          done
-          unzip consul_1.2.3_linux_amd64.zip
-          chmod 755 consul
-          rm consul_1.2.3_linux_amd64.zip
-        )
-        type -p consul-template || (
-          cd /usr/local/bin
-          until curl -L https://releases.hashicorp.com/consul-template/0.19.5/consul-template_0.19.5_linux_amd64.tgz | tar -xz; do
-            sleep 3
-          done
-        )
-        chown -R consul. /consul
-        su - -s /bin/sh consul -c /bin/sh -c 'nohup consul agent -join consul -config-dir=/consul/config -data-dir=/consul/data &'
+        consul-agent.sh --service '{"service": {"name": "vault-ui", "tags": [], "port": 8000}}'
         exec /app/bin/entrypoint.sh start_app
+
+  portal:
+    image: nginx
+    init: true
+    scale: 2
+    networks:
+      - internal
+    dns:
+      - 172.16.238.2
+      - 172.16.238.3
+    depends_on:
+      - consul-worker
+    volumes:
+      - ./consul-template:/usr/local/bin/consul-template
+      - ./consul-templates/nginx.conf:/nginx.conf
+      - ./consul:/usr/local/bin/consul
+      - ./jq:/usr/local/bin/jq
+      - ./scripts/consul-agent.sh:/bin/consul-agent.sh
+    command:
+      - /bin/sh
+      - -c
+      - |
+        # this command will automatically register the vault UI app as a consul service
+        set -ex
+        type -p curl || (
+          until apt-get update; do sleep 3; done
+          until apt-get -y --no-install-recommends install unzip curl ca-certificates procps; do sleep 3; done
+        )
+        consul-agent.sh --service '{"service": {"name": "portal", "tags": [], "port": 80}}' \
+          --consul-template-file-cmd /nginx.conf nginx.tpl /etc/nginx/conf.d/default.conf "consul lock -name service/portal -shell nginx -s reload"
+        exec nginx -g 'daemon off;'
 
 
   socks:
