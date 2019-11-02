@@ -46,6 +46,7 @@ Supplemental reading material:
 > Remove `--scale vault=3` if you want to start one instance of Vault.
 > `docker-compose up -d` would bring only Consul up in HA configuration.
 
+    ./scripts/consul-agent.sh --bootstrap
     docker-compose up --scale vault=3 -d
 
 Initialize Vault.
