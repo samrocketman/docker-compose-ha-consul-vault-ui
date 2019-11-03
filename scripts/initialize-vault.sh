@@ -11,6 +11,8 @@ done
 count=$(docker-compose exec -T consul consul catalog nodes -service=vault | wc -l)
 ((count=count-1))
 
+touch secret.txt
+chmod 600 secret.txt
 "${run[@]}" vault vault operator init > secret.txt
 for x in $(eval echo {1..$count}); do
   head -n3 secret.txt | \

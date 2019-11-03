@@ -49,21 +49,17 @@ Supplemental reading material:
     ./scripts/consul-agent.sh --bootstrap
     docker-compose up --scale vault=3 -d
 
+Configure your browser to use the SOCKS5 proxy listening on `localhost:1080`.
+With your browser configured to use the proxy visit
+`http://consul.service.consul:8500/` and wait for the cluster to be ready.
+After the vault service has all nodes available, it is time to initialize vault.
+
 Initialize Vault.
 
-    docker-compose exec vault sh
-    vault operator init
+    ./scripts/initialize-vault.sh
 
-Unseal Vault:
-
-    for key in <unseal_key1> <unseal_key2> <unseal_key3>; do vault operator unseal "${key}"; done
-
-The `unseal_keyX` comes from the output of `vault operator init`.  You'll need
-to repeat logging into (`docker-compose exec`) and unsealing the other two Vault
-instances.
-
-- `docker-compose exec --index=2 vault`
-- `docker-compose exec --index=3 vault`
+The credentials for vault are located in the file `secret.txt` which is created
+when Vault is initialized.
 
 > **Note:** the Root Token will be used to log into the Vault UI.
 
