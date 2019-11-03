@@ -2,3 +2,4 @@
 /consul-template
 /jq
 /*.zip
+/secret.txt
