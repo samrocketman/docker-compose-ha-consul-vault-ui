@@ -43,18 +43,22 @@ Supplemental reading material:
 
 # Getting started
 
+### Start the cluster
+
 > Remove `--scale vault=3` if you want to start one instance of Vault.
 > `docker-compose up -d` would bring only Consul up in HA configuration.
 
     ./scripts/consul-agent.sh --bootstrap
     docker-compose up --scale vault=3 -d
 
+### Configure your web browser
+
 Configure your browser to use the SOCKS5 proxy listening on `localhost:1080`.
 With your browser configured to use the proxy visit
 `http://consul.service.consul:8500/` and wait for the cluster to be ready.
 After the vault service has all nodes available, it is time to initialize vault.
 
-Initialize Vault.
+### Initialize Vault
 
     ./scripts/initialize-vault.sh
 
@@ -66,7 +70,7 @@ when Vault is initialized.
 # Visit the web UI
 
 In order to properly utilize consul DNS, your browser must be configured to use
-the SOCKS5 proxy listening on `127.0.0.1:1080`.
+the SOCKS5 proxy listening on `localhost:1080`.
 
 - Consul UI: `http://consul.service.consul:8500/`
 - Vault UI (3rd party): `http://vault-ui.service.consul:8000/`
