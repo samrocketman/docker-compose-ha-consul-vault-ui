@@ -110,6 +110,7 @@ fi
 PATH="${bin_path}:${PATH}"
 export PATH bin_path
 export is_root_user consul_prefix
+export datacenter=docker
 while [ "$#" -gt 0 ];do
   case "$1" in
     --bootstrap)
@@ -150,6 +151,11 @@ while [ "$#" -gt 0 ];do
       shift
       shift
       ;;
+    --datacenter)
+      shift
+      datacenter="$1"
+      shift
+      ;;
     *)
       set +x
       echo 'USAGE:'
@@ -180,6 +186,9 @@ while [ "$#" -gt 0 ];do
       echo '  --consul-template-file-cmd "{source file}" "{template name}" "{destination file}" "{reload command}"'
       echo '    install template for consul-template'
       echo '    also runs a command when template is written'
+      echo
+      echo '  --datacenter "{datacenter}"'
+      echo '    customize the datacenter; default to docker'
       exit 1
   esac
 done
@@ -201,9 +210,9 @@ if [ "${is_root_user}" = true ]; then
   chown -R consul. "$consul_prefix"
 
   # start consul agent
-  su - -s /bin/sh consul -c /bin/sh -c "nohup consul agent -retry-join $consul_host -config-dir=$consul_prefix/config -data-dir=$consul_prefix/data &"
+  su - -s /bin/sh consul -c /bin/sh -c "nohup consul agent -datacenter $datacenter -retry-join $consul_host -config-dir=$consul_prefix/config -data-dir=$consul_prefix/data &"
 else
   # start non-root consul agent
-  /bin/sh -c "exec nohup consul agent -retry-join $consul_host -config-dir=$consul_prefix/config -data-dir=$consul_prefix/data &"
+  /bin/sh -c "exec nohup consul agent -datacenter $datacenter -retry-join $consul_host -config-dir=$consul_prefix/config -data-dir=$consul_prefix/data &"
 fi
 
