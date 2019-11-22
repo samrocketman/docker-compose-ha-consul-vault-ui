@@ -119,9 +119,15 @@ while [ "$#" -gt 0 ];do
       download_jq ./
       exit
       ;;
+    --advertise)
+      shift
+      advertise_address="$1"
+      shift
+      ;;
     --consul-host)
       shift
       consul_host="$1"
+      shift
       ;;
     --no-consul)
       shift
@@ -200,17 +206,29 @@ mkdir -p "$consul_prefix"/config "$consul_prefix"/data
 download consul "$AGENT_VERSION" "$bin_path"
 if [ "${is_root_user}" = true ]; then
   # create consul user from which to run the consul agent
-  if addgroup --help 2>&1 | grep BusyBox; then
+  if grep consul /etc/passwd; then
+    echo "consul user already exists so not creating a user."
+  elif ! type -p addgroup && type -p adduser; then
+    # RedHat-like
+    adduser -u 8000 --system --home-dir "$consul_prefix" consul
+  elif addgroup --help 2>&1 | grep BusyBox; then
+    # Alpine-like
     addgroup -g 8000 -S consul
     adduser -u 8000 -G consul -h "$consul_prefix" -S consul
   else
+    # Ubuntu-like
     addgroup --system --gid 8000 consul
     adduser --system --uid 8000 --ingroup consul --home "$consul_prefix" consul
   fi
   chown -R consul. "$consul_prefix"
 
+  additional_opts=""
+  if [ -n "$advertise_address" ]; then
+    additional_opts="$additional_opts -advertise=$advertise_address"
+  fi
+
   # start consul agent
-  su - -s /bin/sh consul -c /bin/sh -c "nohup consul agent -datacenter $datacenter -retry-join $consul_host -config-dir=$consul_prefix/config -data-dir=$consul_prefix/data &"
+  su -s /bin/sh -c "nohup consul agent -datacenter $datacenter -retry-join $consul_host -config-dir=$consul_prefix/config -data-dir=$consul_prefix/data $additional_opts &" - consul
 else
   # start non-root consul agent
   /bin/sh -c "exec nohup consul agent -datacenter $datacenter -retry-join $consul_host -config-dir=$consul_prefix/config -data-dir=$consul_prefix/data &"
