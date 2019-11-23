@@ -89,7 +89,7 @@ extensions are available for managing proxy settings.
 
 ### Visit the URL
 
-Visit http://portal.consul.service/.  It provides links to other web UIs and if
+Visit http://portal.service.consul/.  It provides links to other web UIs and if
 you configure additional portal services, then they will also show up
 automatically.
 
