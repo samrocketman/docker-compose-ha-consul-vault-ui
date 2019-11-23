@@ -208,7 +208,7 @@ if [ "${is_root_user}" = true ]; then
   # create consul user from which to run the consul agent
   if grep consul /etc/passwd; then
     echo "consul user already exists so not creating a user."
-  elif ! type -p addgroup && type -p adduser; then
+  elif ! type addgroup && type adduser; then
     # RedHat-like
     adduser -u 8000 --system --home-dir "$consul_prefix" consul
   elif addgroup --help 2>&1 | grep BusyBox; then
