@@ -1,0 +1,74 @@
+{{scratch.Set "active" "false"}}<!DOCTYPE html>
+<html>
+<head>
+  <title>Consul Service Portal</title>
+  <link rel ="stylesheet" type="text/css" href="stylesheet.css" title="Style">
+  <style>
+    body {
+      padding: 2em;
+    }
+    table.example tr td:first-child, table.example tr th:first-child {
+      padding-left: 2em;
+      padding-right: 2em;
+      font-size: 1.5em;
+      width: 1em;
+      white-space: nowrap;
+    }
+    table.example tr td:last-child, table.example tr th:last-child {
+      font-size: 1.5em;
+    }
+    p, ul li {
+      font-size: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <div class="contentContainer"><div class="description">
+  <ul class="blockList">
+  <li class="blockList">
+    <h1>Hashi Services</h1>
+    <div class="contentContainer">
+      <p>
+        The following services are available from the <tt>HA Consul + Vault + Vault UI</tt> project.
+      </p>
+      <table class="example">
+        <tbody>
+          <tr><th>Link to service</th><th>Description</th></tr>
+          <tr><td><a href="http://consul.service.consul:8500/">Consul UI</a></td><td>Consul UI frontend for browsing services discovered and other data.</td></tr>
+          <tr><td><a href="http://active.vault.service.consul:8200/">Vault UI</a> (native)</td><td>The Vault UI which is built into Vault.</td></tr>
+          <tr><td><a href="http://vault-ui.service.consul:8000/">Vault UI</a> (3rd party)</td><td>Vault didn't always have a UI.  This is a 3rd party UI for Vault when Vault didn't have one of its own.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </li>
+  <li class="blockList">
+    <h1>Welcome to the service portal</h1>
+    <div class="contentContainer">
+      <p>
+        This section lists services which are registered with consul as being
+        available within the web portal.  To qualify as a portal service, a
+        registered consul service must have a tag <tt>portal</tt> and set
+        metadata <tt>title</tt> and <tt>description</tt>.  Portal services are
+        reversed proxied by this nginx server as a sub-path in the URL.  Within
+        this container the following files are updated via
+        <a href="https://github.com/hashicorp/consul-template">consul-template</a></tt>.
+      </p>
+      <ul>
+        <li><tt>/etc/nginx/conf.d/default.conf</tt> - nginx configuration for reverse proxying services.  If updated, the nginx daemon is reloaded.</li>
+        <li><tt>/usr/share/nginx/html/index.html</tt> - this web page which is generated based on service discovery.</li>
+      </ul>
+      <p>The following table is dynamically generated based on discovered services.</p>
+      <table class="example">
+        <tbody>
+          <tr><th>Link to service</th><th>Description</th></tr>{{ range (index (services | byTag) "portal") }}{{ $name := .Name }}{{$service := service .Name}}{{if $service}}{{scratch.Set "active" "true"}}
+          {{range $service}}{{with (index .ServiceMeta)}}<tr><td><a href="{{$name}}/">{{.title}}</a></td><td>{{.description}}</td>{{end}}{{end}}{{end}}{{end}}{{if eq ( scratch.Get "active" ) "false"}}
+          <tr><td>N/A</td><td>No portal services registered.</td></tr>{{end}}
+        </tbody>
+      </table>
+    </div>
+  </li>
+  </ul>
+  </div>
+  </div>
+</body>
+</html>
