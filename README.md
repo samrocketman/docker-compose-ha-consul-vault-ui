@@ -69,12 +69,38 @@ when Vault is initialized.
 
 # Visit the web UI
 
-In order to properly utilize consul DNS, your browser must be configured to use
-the SOCKS5 proxy listening on `localhost:1080`.
+### Configure your browser
 
-- Consul UI: `http://consul.service.consul:8500/`
-- Vault UI (3rd party): `http://vault-ui.service.consul:8000/`
-- Vault UI (native): `http://active.vault.service.consul:8200/`
+Configure your web browser to use the SOCKS5 proxy listening on
+`localhost:1080`.
+
+In Firefox, do the following:
+
+1. Edit [connections settings][firefox-socks]
+2. Set Manual proxy configuration
+3. Set SOCKS host to `localhost`, set Port to `1080`, and check `SOCKS v5`
+   boolean.
+
+Alternately install [FoxyProxy extension][foxyproxy] which is an extension for
+quickly switching proxies on or off.
+
+For other browsers, web search how to configure proxy settings or see what
+extensions are available for managing proxy settings.
+
+### Visit the URL
+
+Visit http://portal.consul.service/.  It provides links to other web UIs and if
+you configure additional portal services, then they will also show up
+automatically.
+
+### Other portal services
+
+For playing around with service discovery I have created other docker-compose
+files which will automatically register with this consul cluster.  Here's a list
+of what I have created so far.
+
+- [consul-grafana](https://github.com/samrocketman/consul-grafana)
+- [consul-nexus3](https://github.com/samrocketman/consul-nexus3)
 
 # Experiment
 
@@ -137,6 +163,8 @@ Configure your browser to use SOCKS proxy at `127.0.0.1:1080`.
 [c]: https://www.consul.io/
 [d]: https://www.docker.com/
 [dc]: https://docs.docker.com/compose/
+[firefox-socks]: https://support.mozilla.org/en-US/kb/connection-settings-firefox
+[foxyproxy]: https://addons.mozilla.org/en-US/firefox/addon/foxyproxy-standard/
 [ft]: https://www.consul.io/docs/internals/consensus.html#deployment-table
 [socks]: https://github.com/serjs/socks5-server
 [ui]: https://github.com/djenriquez/vault-ui
