@@ -159,6 +159,24 @@ Run a [SOCKS5 proxy][socks] for use with your browser.
 
 Configure your browser to use SOCKS proxy at `127.0.0.1:1080`.
 
+# Screenshots
+
+![show portal before services are available](https://user-images.githubusercontent.com/875669/69476734-cbeb8500-0dab-11ea-83a1-f46013438fc0.png)
+
+---
+
+![show portal after services are available](https://user-images.githubusercontent.com/875669/69476742-dad23780-0dab-11ea-9b01-ec01574facab.png)
+
+---
+
+![consul screenshot of all discovered services](https://user-images.githubusercontent.com/875669/69476746-e32a7280-0dab-11ea-99cb-d3a39426a299.png)
+
+---
+
+![consul screenshot of service metadata](https://user-images.githubusercontent.com/875669/69476747-e9b8ea00-0dab-11ea-9bda-1abf3303e1fd.png)
+
+---
+
 # License
 
 [MIT License](LICENSE)
