@@ -99,8 +99,11 @@ For playing around with service discovery I have created other docker-compose
 files which will automatically register with this consul cluster.  Here's a list
 of what I have created so far.
 
-- [consul-grafana](https://github.com/samrocketman/consul-grafana)
-- [consul-nexus3](https://github.com/samrocketman/consul-nexus3)
+- [consul-chronograf][consul-chronograf]
+- [consul-grafana][consul-grafana]
+- [consul-influxdb][consul-influxdb]
+- [consul-kapacitor][consul-kapacitor]
+- [consul-nexus3][consul-nexus3]
 
 # Experiment
 
@@ -161,6 +164,11 @@ Configure your browser to use SOCKS proxy at `127.0.0.1:1080`.
 [MIT License](LICENSE)
 
 [c]: https://www.consul.io/
+[consul-chronograf]: https://github.com/samrocketman/consul-chronograf
+[consul-grafana]: https://github.com/samrocketman/consul-grafana
+[consul-influxdb]: https://github.com/samrocketman/consul-influxdb
+[consul-kapacitor]: https://github.com/samrocketman/consul-kapacitor
+[consul-nexus3]: https://github.com/samrocketman/consul-nexus3
 [d]: https://www.docker.com/
 [dc]: https://docs.docker.com/compose/
 [firefox-socks]: https://support.mozilla.org/en-US/kb/connection-settings-firefox
