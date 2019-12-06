@@ -1,5 +1,7 @@
 version: '2.2'
 
+volumes:
+  consul-leader:
 
 #define internal docker networks for container connectivity
 networks:
@@ -74,7 +76,7 @@ services:
   consul:
     image: 'consul'
     init: true
-    command: 'agent -datacenter docker -server -bootstrap-expect 1 -disable-host-node-id -client 0.0.0.0 -ui'
+    command: 'agent -datacenter docker -server -bootstrap-expect 1 -disable-host-node-id -client 0.0.0.0 -ui -data-dir /consul/data'
     healthcheck:
       test: ['CMD', '/bin/sh', '-c', 'curl -sfLo /dev/null http://127.0.0.1:8500/v1/health/node/$$HOSTNAME']
     scale: 1
@@ -83,6 +85,8 @@ services:
     dns:
       - 172.16.238.2
       - 172.16.238.3
+    volumes:
+      - consul-leader:/consul/data
     depends_on:
       - dnsmasq
 
