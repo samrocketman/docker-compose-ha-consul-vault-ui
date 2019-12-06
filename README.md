@@ -118,6 +118,21 @@ dnsmasq to include new services.  dnsmasq will experience zero downtime.
 To play with failover for killing consul instances, it is recommended to review
 [fault tolerance for consul HA deployments][ft].
 
+# Starting and stopping
+
+Because high availability clusters have to gossip across nodes you can't execute
+a simple `docker-compose down` without corrupting the clusters.  Instead, you
+have to gracefully shut down all clusters that depend on consul and then
+gracefully shutdown consul itself.  For this, I have provided a script.
+
+Stop consul and vault cluster safely.
+
+    ./scripts/graceful-shutdown.sh
+
+Start the consul and vault clusters.
+
+    docker-compose up -d
+
 # Troubleshooting
 
 ### DNS
