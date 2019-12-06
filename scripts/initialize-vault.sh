@@ -17,7 +17,16 @@ if [ ! -f secret.txt ]; then
   "${run[@]}" vault vault operator init > secret.txt
 fi
 for x in $(eval echo {1..$count}); do
-  head -n3 secret.txt | \
-    awk '{print $4}' | \
+  awk '
+  BEGIN {
+    x=0
+  }
+  $0 ~ /Unseal Key/ {
+    print $NF;
+    x++;
+    if(x>2) {
+      exit
+    }
+  }' secret.txt | \
     xargs -n1 -- "${run[@]}" --index="$x" vault vault operator unseal
 done
