@@ -31,6 +31,8 @@ Features:
 - Vault UI makes use of Consul DNS to log into Vault.  This means Vault UI does
   not necessarily need to know where Vault is because Consul service discovery
   takes care of that.
+- Persists data across restarts as long as the cluster is gracefully shut down.
+  See [`Starting and stopping` section][#starting-and-stopping].
 
 # Prerequisites
 
