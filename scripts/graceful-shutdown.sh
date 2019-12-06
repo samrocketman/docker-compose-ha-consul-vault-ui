@@ -20,3 +20,4 @@ for x in $(eval echo {1..$count}); do
   "${run[@]}" --index="$x" consul-worker consul leave
 done
 "${run[@]}" consul consul leave
+docker-compose stop
