@@ -33,6 +33,8 @@ Features:
   takes care of that.
 - Persists data across restarts as long as the cluster is gracefully shut down.
   See [`Starting and stopping` section][#starting-and-stopping].
+- Local docker infrastructure is able to anonymously authenticate with Vault via
+  approle method and its CIDR address.
 
 # Prerequisites
 
