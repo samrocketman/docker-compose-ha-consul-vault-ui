@@ -1,4 +1,4 @@
-
+#!/bin/bash
 source scripts/vault-functions.sh
 
 set_vault_admin_token
