@@ -1,4 +1,7 @@
 #!/bin/bash
+# This script uses the Vault root token to create a temporary token associated
+# with the admin policy.  This is better than using the root token for
+# everything in order to perform initial scripting admin tasks.
 
 set -e
 if [ "$#" -gt 1 ]; then

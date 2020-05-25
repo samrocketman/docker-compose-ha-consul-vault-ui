@@ -34,3 +34,4 @@ done
 # set up initial authorization schemes for local infra
 ./scripts/initialize-admin-policy.sh
 ./scripts/apply-all-policies.sh
+./scripts/enable-docker-approle.sh
