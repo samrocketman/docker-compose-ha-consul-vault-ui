@@ -31,4 +31,6 @@ for x in $(eval echo {1..$count}); do
     xargs -n1 -- "${run[@]}" --index="$x" vault vault operator unseal
 done
 
+# set up initial authorization schemes for local infra
 ./scripts/initialize-admin-policy.sh
+./scripts/apply-all-policies.sh
