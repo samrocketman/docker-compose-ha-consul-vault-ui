@@ -43,7 +43,9 @@ Features:
 
 Supplemental reading material:
 
-* [Hitchhiker's guide to administering Vault](docs/vault-for-humans.md)
+- [Hitchhiker's guide to administering Vault](docs/vault-for-humans.md)
+- [Vault Auth By CIDR](docs/vault-auth-by-cidr.md) enables anonymous login to
+  Vault from docker infrastructure.
 
 # Getting started
 
