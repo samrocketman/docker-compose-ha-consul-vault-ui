@@ -1,5 +1,6 @@
+/*.zip
 /consul
 /consul-template
 /jq
-/*.zip
 /secret.txt
+/vault

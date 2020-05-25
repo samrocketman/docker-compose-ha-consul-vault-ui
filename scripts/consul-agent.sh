@@ -8,6 +8,7 @@ set -ex
 #
 AGENT_VERSION='1.6.1'
 TEMPLATE_VERSION='0.22.0'
+VAULT_VERSION='1.4.2'
 consul_host=consul
 
 #
@@ -116,6 +117,7 @@ while [ "$#" -gt 0 ];do
     --bootstrap)
       download consul "$AGENT_VERSION" ./
       download consul-template "$TEMPLATE_VERSION" ./
+      download vault "$VAULT_VERSION" ./
       download_jq ./
       exit
       ;;
