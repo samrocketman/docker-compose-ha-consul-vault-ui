@@ -43,7 +43,7 @@ Features:
 
 Supplemental reading material:
 
-* [Hitchhiker's guide to administering Vault](vault-for-humans.md)
+* [Hitchhiker's guide to administering Vault](docs/vault-for-humans.md)
 
 # Getting started
 
