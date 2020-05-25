@@ -28,11 +28,7 @@ function set_vault_infra_token() {
 
 function get_admin_token() (
   cd_vault
-  if [ "$#" -gt 0 ]; then
-    ./scripts/get-admin-token.sh "$@"
-  else
-    ./scripts/get-admin-token.sh
-  fi
+  ./scripts/get-admin-token.sh "$@"
 )
 
 function get_infra_token() (
@@ -47,7 +43,7 @@ function revoke_self() (
 # UTILITY FUNCTIONS
 
 function execute_vault_command() (
-  if vault_dir_available; then
+  if vault_git_dir_available; then
     cd_vault
     docker-compose exec -Te VAULT_TOKEN vault "$@"
   else
@@ -55,7 +51,7 @@ function execute_vault_command() (
   fi
 )
 
-function vault_dir_available() {
+function vault_git_dir_available() {
   [ -d "${VAULT_GIT_DIR}" ]
 }
 
