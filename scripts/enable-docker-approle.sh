@@ -18,6 +18,7 @@ execute_vault_command \
 # docker network CIDR
 execute_vault_command \
   vault write auth/approle/role/docker \
+    role_id=docker \
     bind_secret_id=false \
     token_bound_cidrs=172.16.238.0/24,127.0.0.1/32 \
     token_ttl=15m \
