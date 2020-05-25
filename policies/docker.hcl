@@ -1,3 +1,8 @@
+# List, create, update, and delete key/value docker secrets
+path "docker/*" {
+    capabilities = [ "create", "read", "update", "list" ]
+}
+
 # Allow tokens to look up their own properties
 path "auth/token/lookup-self" {
     capabilities = ["read"]
