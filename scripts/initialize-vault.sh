@@ -30,3 +30,5 @@ for x in $(eval echo {1..$count}); do
   }' secret.txt | \
     xargs -n1 -- "${run[@]}" --index="$x" vault vault operator unseal
 done
+
+./scripts/initialize-policies.sh
