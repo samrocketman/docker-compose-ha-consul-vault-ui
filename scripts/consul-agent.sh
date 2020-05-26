@@ -1,13 +1,15 @@
 #!/bin/sh
 # Created by Sam Gleske
 # https://github.com/samrocketman/docker-compose-ha-consul-vault-ui
+# Acts as a consul client and is able to download software from
+# https://releases.hashicorp.com/
 set -ex
 
 #
 # VARIABLES
 #
-AGENT_VERSION='1.6.1'
-TEMPLATE_VERSION='0.22.0'
+AGENT_VERSION='1.7.3'
+TEMPLATE_VERSION='0.25.0'
 VAULT_VERSION='1.4.2'
 consul_host=consul
 
