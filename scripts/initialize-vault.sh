@@ -35,4 +35,5 @@ done
 ./scripts/initialize-admin-policy.sh
 ./scripts/apply-all-policies.sh
 ./scripts/enable-docker-approle.sh
+./scripts/enable-docker-secrets-store.sh
 ./scripts/set-auth-methods.sh
