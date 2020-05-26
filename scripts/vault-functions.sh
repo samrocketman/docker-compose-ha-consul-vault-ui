@@ -9,7 +9,7 @@ export VAULT_GIT_DIR
 # AUTH FUNCTIONS
 
 function set_vault_addr() {
-  VAULT_ADDR='http://vault.service.consul:8200'
+  VAULT_ADDR='http://active.vault.service.consul:8200'
   export VAULT_ADDR
 }
 
@@ -58,4 +58,3 @@ function vault_git_dir_available() {
 function cd_vault() {
   cd "${VAULT_GIT_DIR}"
 }
-
