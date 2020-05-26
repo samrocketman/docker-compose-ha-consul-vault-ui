@@ -97,7 +97,6 @@ type id
 type mkdir
 type rm
 type sha256sum
-type unzip
 
 if [ "$(id -u)" -eq 0 ]; then
   is_root_user=true
@@ -115,6 +114,7 @@ export datacenter=docker
 while [ "$#" -gt 0 ];do
   case "$1" in
     --bootstrap)
+      type unzip
       download consul "$AGENT_VERSION" ./
       download consul-template "$TEMPLATE_VERSION" ./
       download vault "$VAULT_VERSION" ./
