@@ -1,7 +1,9 @@
 version: '2.2'
 
+
 volumes:
   consul-leader:
+
 
 #define internal docker networks for container connectivity
 networks:
@@ -162,39 +164,6 @@ services:
     depends_on:
       - consul-worker
 
-
-  vault-ui:
-    image: 'djenriquez/vault-ui'
-    init: true
-    scale: 1
-    environment:
-      VAULT_AUTH_DEFAULT: "TOKEN"
-      VAULT_URL_DEFAULT: "http://active.vault.service.consul:8200"
-    networks:
-      - internal
-    dns:
-      - 172.16.238.2
-      - 172.16.238.3
-    depends_on:
-      - vault
-    entrypoint: ""
-    volumes:
-      - ./consul-template:/usr/local/bin/consul-template
-      - ./consul:/usr/local/bin/consul
-      - ./jq:/usr/local/bin/jq
-      - ./scripts/consul-agent.sh:/bin/consul-agent.sh
-    command:
-      - /bin/sh
-      - -c
-      - |
-        # this command will automatically register the vault UI app as a consul service
-        set -ex
-        type curl || (
-          until apk update; do sleep 3; done
-          until apk add curl; do sleep 3; done
-        )
-        consul-agent.sh --service '{"service": {"name": "vault-ui", "tags": [], "port": 8000}}'
-        exec /app/bin/entrypoint.sh start_app
 
   portal:
     image: nginx
