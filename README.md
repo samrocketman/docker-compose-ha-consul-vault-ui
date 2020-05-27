@@ -109,6 +109,7 @@ of what I have created so far.
 - [consul-grafana][consul-grafana]
 - [consul-influxdb][consul-influxdb]
 - [consul-kapacitor][consul-kapacitor]
+- [consul-mysql][consul-mysql]
 - [consul-nexus3][consul-nexus3]
 
 # Experiment
@@ -207,6 +208,7 @@ Configure your browser to use SOCKS proxy at `127.0.0.1:1080`.
 [consul-grafana]: https://github.com/samrocketman/consul-grafana
 [consul-influxdb]: https://github.com/samrocketman/consul-influxdb
 [consul-kapacitor]: https://github.com/samrocketman/consul-kapacitor
+[consul-mysql]: https://github.com/samrocketman/consul-mysql
 [consul-nexus3]: https://github.com/samrocketman/consul-nexus3
 [d]: https://www.docker.com/
 [dc]: https://docs.docker.com/compose/
