@@ -16,6 +16,16 @@ consul_host=consul
 #
 # FUNCTIONS
 #
+checksum() {
+  if type sha256sum; then
+    sha256sum "$@"
+  elif type shasum; then
+    shasum -a 256 "$@"
+  else
+    echo 'ERROR: could not find sha256sum or shasum.'
+    return 1
+  fi
+}
 download() {
   # $1 is the application
   # $2 is the version
@@ -32,7 +42,7 @@ download() {
     fi
     curl -fL https://releases.hashicorp.com/"$1"/"$2"/"$1"_"$2"_SHA256SUMS | \
       grep -- "$zip_file" > /tmp/"$zip_file".sha256sum
-    until sha256sum -c /tmp/"$zip_file".sha256sum; do
+    until checksum -c /tmp/"$zip_file".sha256sum; do
       curl -LO https://releases.hashicorp.com/"$1"/"$2"/"$zip_file"
       sleep 3
     done
@@ -89,6 +99,15 @@ run_consul_template() {
   fi
 }
 
+bootstrap() {
+  type unzip
+  download consul "$AGENT_VERSION" ./
+  download consul-template "$TEMPLATE_VERSION" ./
+  download vault "$VAULT_VERSION" ./
+  download_jq ./
+  exit
+}
+
 #
 # MAIN EXECUTION
 #
@@ -98,7 +117,7 @@ type curl
 type id
 type mkdir
 type rm
-type sha256sum
+type sha256sum || type shasum
 
 if [ "$(id -u)" -eq 0 ]; then
   is_root_user=true
@@ -116,12 +135,7 @@ export datacenter=docker
 while [ "$#" -gt 0 ];do
   case "$1" in
     --bootstrap)
-      type unzip
-      download consul "$AGENT_VERSION" ./
-      download consul-template "$TEMPLATE_VERSION" ./
-      download vault "$VAULT_VERSION" ./
-      download_jq ./
-      exit
+      bootstrap
       ;;
     --advertise)
       shift
@@ -202,6 +216,11 @@ while [ "$#" -gt 0 ];do
       exit 1
   esac
 done
+
+if [ "$(uname)" = Darwin ]; then
+  echo 'WARNING: running with --bootstrap instead because consul-agent.sh cannot be started from Mac OS X.'
+  bootstrap
+fi
 
 if [ "$no_consul" = true ]; then
   exit

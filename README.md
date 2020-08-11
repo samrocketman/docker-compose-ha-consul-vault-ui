@@ -26,15 +26,12 @@ Features:
 - consul-template updates dnsmasq configuration and restarts dnsmasq when the
   configuration has changed (e.g. consul cluster size is increased on the fly).
   This makes consul DNS lookups HA.
-- Vault and Vault UI is registered via service discovery which is exposed via
-  Consul DNS.
-- Vault UI makes use of Consul DNS to log into Vault.  This means Vault UI does
-  not necessarily need to know where Vault is because Consul service discovery
-  takes care of that.
+- Vault is registered via service discovery which is exposed via Consul DNS.
 - Persists data across restarts as long as the cluster is gracefully shut down.
   See [`Starting and stopping` section][#starting-and-stopping].
 - Local docker infrastructure is able to anonymously authenticate with Vault via
   approle method and its CIDR address.
+- Linux and Mac OS with docker supported.
 
 # Prerequisites
 
@@ -71,8 +68,6 @@ After the vault service has all nodes available, it is time to initialize vault.
 The credentials for vault are located in the file `secret.txt` which is created
 when Vault is initialized.
 
-> **Note:** the Root Token will be used to log into the Vault UI.
-
 # Visit the web UI
 
 ### Configure your browser
@@ -93,11 +88,23 @@ quickly switching proxies on or off.
 For other browsers, web search how to configure proxy settings or see what
 extensions are available for managing proxy settings.
 
-### Visit the URL
+### Visit services via Consul DNS
 
 Visit http://portal.service.consul/.  It provides links to other web UIs and if
 you configure additional portal services, then they will also show up
 automatically.
+
+Alternately, you can visit consul and vault directly at:
+
+* http://consul.service.consul:8500/
+* http://active.vault.service.consul:8200/
+
+To log into Vault UI you must generate for yourself an admin token.
+
+    ./scripts/get-admin-token.sh
+
+The root user token for Vault is stored in `secret.txt` at the root of this
+repository after you initialize Vault.
 
 ### Other portal services
 
