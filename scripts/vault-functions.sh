@@ -58,3 +58,11 @@ function vault_git_dir_available() {
 function cd_vault() {
   cd "${VAULT_GIT_DIR}"
 }
+
+function random_password() {
+  local chars='-;.~,.<>[]{}!@#$%^&*()_+=`0-9a-zA-Z'
+  if [ -n "${1:-}" ]; then
+    chars="${1}"
+  fi
+  tr -dc -- "${chars}" < /dev/urandom | head -c64;echo
+}
