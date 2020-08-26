@@ -10,6 +10,10 @@ source scripts/vault-functions.sh
 # configure auth
 set_vault_admin_token
 
+if execute_vault_command vault auth list | grep '^approle/'; then
+  exit
+fi
+
 # enable approle auth method
 execute_vault_command \
   vault auth enable approle
