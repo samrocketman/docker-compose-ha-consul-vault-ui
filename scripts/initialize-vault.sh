@@ -32,7 +32,7 @@ for x in $(eval echo {1..$count}); do
 done
 
 # set up initial authorization schemes for local infra
-./scripts/initialize-admin-policy.sh
+./scripts/apply-admin-policy.sh
 ./scripts/apply-all-policies.sh
 ./scripts/enable-docker-approle.sh
 ./scripts/enable-docker-secrets-store.sh
