@@ -8,7 +8,7 @@ set -ex
 #
 # VARIABLES
 #
-AGENT_VERSION='1.8.2'
+AGENT_VERSION='1.8.3'
 TEMPLATE_VERSION='0.25.1'
 VAULT_VERSION='1.5.0'
 consul_host=consul
