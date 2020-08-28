@@ -17,13 +17,13 @@ function get_highest_release() {
       highest = $0
       next
     }
-    split(highest, highestarr)
-    split($0, thisarr)
+    split(highest, highest_array)
+    split($0, this_array)
     for(x = 1; x <= NF; x++) {
-      if(thisarr[x] < highestarr[x]) {
+      if(this_array[x] < highest_array[x]) {
         next
       }
-      if(thisarr[x] == highestarr[x]) {
+      if(this_array[x] == highest_array[x]) {
         continue
       }
       highest = $0
