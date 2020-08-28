@@ -37,7 +37,7 @@ function get_infra_token() (
 )
 
 function revoke_self() (
-  execute_vault_command vault token revoke -self
+  execute_vault_command vault token revoke -self >&2
 )
 
 # UTILITY FUNCTIONS
