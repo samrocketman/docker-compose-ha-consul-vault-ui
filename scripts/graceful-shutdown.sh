@@ -16,6 +16,15 @@ count="$(docker-compose ps -q consul-worker | wc -l)"
 
 ./scripts/stop-vault.sh
 
+# Create a backup before shutdown
+backup_file="backup_$(date +%Y-%m-%d-%s).snap"
+if [ ! -d backups ]; then
+  mkdir backups
+fi
+"${run[@]}" consul consul snapshot save "${backup_file}"
+consul_container="$(docker-compose ps -q consul)"
+docker cp "${consul_container}:${backup_file}" ./backups/
+# Poweroff consul cluster
 for x in $(eval echo {1..$count}); do
   "${run[@]}" --index="$x" consul-worker consul leave
 done

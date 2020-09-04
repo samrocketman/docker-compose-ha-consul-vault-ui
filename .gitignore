@@ -1,4 +1,5 @@
 /*.zip
+/backups
 /consul
 /consul-template
 /jq
