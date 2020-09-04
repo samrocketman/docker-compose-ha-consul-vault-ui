@@ -10,7 +10,7 @@ set -ex
 #
 AGENT_VERSION='1.8.3'
 TEMPLATE_VERSION='0.25.1'
-VAULT_VERSION='1.5.0'
+VAULT_VERSION='1.5.3'
 consul_host=consul
 
 #
@@ -54,6 +54,9 @@ download() {
 }
 
 download_jq() {
+  jq_version='1.6'
+  # SHA-256 hash
+  jq_hash='af986793a515d500ab2d35f8d2aecd656e764504b789b66d7e1a0b727a124c44'
   if [ ! "$1" = "./" ] && type jq || [ -f jq ]; then
     return
   fi
@@ -61,9 +64,12 @@ download_jq() {
     if [ -n "$1" ]; then
       cd "$1"
     fi
-    curl -Lo jq \
-      https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
-    chmod 755 jq
+    until echo "${jq_hash}  jq" | checksum -c -; do
+      curl -Lo jq \
+        https://github.com/stedolan/jq/releases/download/jq-"${jq_version}"/jq-linux64
+      chmod 755 jq
+      sleep 3
+    done
   )
 }
 
