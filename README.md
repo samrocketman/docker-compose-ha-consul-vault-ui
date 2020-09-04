@@ -188,6 +188,20 @@ Run a [SOCKS5 proxy][socks] for use with your browser.
 
 Configure your browser to use SOCKS proxy at `127.0.0.1:1080`.
 
+### Recovering data
+
+It's possible a cluster was shutdown uncleanly and put into an irrecoverable
+state with no leader.  If you have ever cleanly shut down consul, then it's
+possible you have a backup in the `backups/` directory.  The latest backup can
+be restored via the following script.
+
+    ./scripts/restore-consul.sh
+
+If you have a specific backup you wish to restore, then you can call it as an
+argument.
+
+    ./scripts/restore-consul.sh backups/backup.snap
+
 # Screenshots
 
 ![show portal before services are available](https://user-images.githubusercontent.com/875669/69476734-cbeb8500-0dab-11ea-83a1-f46013438fc0.png)
