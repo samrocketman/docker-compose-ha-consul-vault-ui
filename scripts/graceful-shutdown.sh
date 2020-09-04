@@ -6,7 +6,7 @@
 # docker-compose version 1.25.0, build 0a186604
 # Thu Dec  5 14:28:52 PST 2019
 # DESCRIPTION
-# This
+#   This script performs a graceful shutdown of the consul cluster.
 
 set -ex
 
