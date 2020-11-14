@@ -8,9 +8,9 @@ set -ex
 #
 # VARIABLES
 #
-AGENT_VERSION='1.8.3'
+AGENT_VERSION='1.8.5'
 TEMPLATE_VERSION='0.25.1'
-VAULT_VERSION='1.5.3'
+VAULT_VERSION='1.6.0'
 consul_host=consul
 
 #
