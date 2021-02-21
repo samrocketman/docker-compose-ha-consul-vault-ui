@@ -9,7 +9,19 @@ if [ "$#" -gt 1 ]; then
   exit 1
 fi
 
-VAULT_ROOT_TOKEN="$(gawk '$0 ~ /Initial Root Token/ { print $NF;exit }' secret.txt)"
+function get-secret-txt() {
+  if [ -r secret.txt ]; then
+    cat secret.txt
+  elif [ -r secret.txt.gpg ]; then
+    gpg -d secret.txt.gpg
+  else
+    echo 'ERROR: no secret.txt or secret.txt.gpg found.' >&2
+    return 1
+  fi
+}
+
+VAULT_ROOT_TOKEN="$(get-secret-txt | gawk '$0 ~ /Initial Root Token/ { print $NF;exit }')"
+[ -n "$VAULT_ROOT_TOKEN" ]
 docker-compose exec -Te VAULT_TOKEN="$VAULT_ROOT_TOKEN" vault \
   vault token create -policy=admin -orphan -period="${1:-15m}" | \
   gawk '$1 == "token" { print $2; exit}'

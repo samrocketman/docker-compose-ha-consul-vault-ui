@@ -11,13 +11,35 @@ done
 count=$(docker-compose exec -T consul consul catalog nodes -service=vault | wc -l)
 ((count=count-1))
 
-if [ ! -f secret.txt ]; then
-  touch secret.txt
-  chmod 600 secret.txt
-  "${run[@]}" vault vault operator init > secret.txt
+function write-secret-txt() {
+  if [ -n "${recipient_list:-}" ]; then
+    touch secret.txt.gpg
+    chmod 600 secret.txt.gpg
+    gpg -er "${recipient_list:-}" - > secret.txt.gpg
+  else
+    touch secret.txt
+    chmod 600 secret.txt
+    cat > secret.txt
+  fi
+}
+
+function get-secret-txt() {
+  if [ -r secret.txt ]; then
+    cat secret.txt
+  elif [ -r secret.txt.gpg ]; then
+    gpg -d secret.txt.gpg
+  else
+    echo 'ERROR: no secret.txt or secret.txt.gpg found.' >&2
+    return 1
+  fi
+}
+
+if [ ! -f secret.txt -a ! -f secret.txt.gpg ]; then
+  "${run[@]}" vault vault operator init | write-secret-txt
 fi
 for x in $(eval echo {1..$count}); do
-  awk '
+  get-secret-txt | \
+  gawk '
   BEGIN {
     x=0
   }
@@ -27,7 +49,7 @@ for x in $(eval echo {1..$count}); do
     if(x>2) {
       exit
     }
-  }' secret.txt | \
+  }' | \
     xargs -n1 -- "${run[@]}" --index="$x" vault vault operator unseal
 done
 

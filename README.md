@@ -63,10 +63,19 @@ After the vault service has all nodes available, it is time to initialize vault.
 
 ### Initialize Vault
 
+If you wish to secure `secret.txt` with GPG, then set the `recipient_list`
+environment variable.  For example, the following.
+
+    export recipient_list="<gpg fingerprint to your secret gpg key>"
+
+If you do not use GPG or do not want to, then skip setting `recipient_list`.
+Initialize vault witht he following command.
+
     ./scripts/initialize-vault.sh
 
 The credentials for vault are located in the file `secret.txt` which is created
-when Vault is initialized.
+when Vault is initialized.  Alternately, `secret.txt.gpg` if using GPG
+encryption.
 
 # Visit the web UI
 

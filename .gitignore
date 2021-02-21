@@ -3,5 +3,5 @@
 /consul
 /consul-template
 /jq
-/secret.txt
+/secret.txt*
 /vault
