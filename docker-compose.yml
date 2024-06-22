@@ -1,5 +1,7 @@
 volumes:
   consul-leader:
+  etc-pihole:
+  etc-pihole-dnsmasq:
 
 
 #define internal docker networks for container connectivity
@@ -14,10 +16,49 @@ networks:
 
 #define docker containers as services
 services:
+  # ad-blocking DNS service
+  pihole:
+    image: pihole/pihole:latest
+    restart: always
+    entrypoint: ''
+    command:
+      - /bin/bash
+      - -exc
+      - |
+        IP="$$(awk '/32 host/ && f ~ /172.16.238/ { print f; exit }; {f=$$2}' /proc/net/fib_trie)"
+        consul-agent.sh \
+          --consul-host consul \
+          --advertise "$$IP" \
+          --service '{"service": {"name": "pihole", "tags": ["portal"], "port": 80, "meta": {"title": "Pi-hole", "description": "A <a href=https://github.com/pi-hole/docker-pi-hole>dockerized DNS server</a> which blocks ads with a web interface."}}}'
+        exec /s6-init
+    # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
+    #ports:
+    #  - "53:53/tcp"
+    #  - "53:53/udp"
+    #  - "80:80/tcp"
+    cap_add:
+      - NET_ADMIN
+    environment:
+      TZ: "${PIHOLE_TZ:-America/New_York}"
+      WEBPASSWORD: "${PIHOLE_WEBPASSWORD:-}"
+    volumes:
+      - ./consul:/usr/local/bin/consul
+      - ./jq:/usr/local/bin/jq
+      - ./scripts/consul-agent.sh:/bin/consul-agent.sh
+      - 'etc-pihole:/etc/pihole'
+      - 'etc-pihole-dnsmasq:/etc/dnsmasq.d'
+    depends_on:
+      - consul-worker
+    networks:
+      internal:
+        ipv4_address: 172.16.238.253
   #create a DNS service which also forwards lookups to consul DNS
   dnsmasq: &dnsmasq
     image: storytel/dnsmasq
     init: true
+    restart: always
+    dns:
+      - 172.16.238.253
     command:
       - /bin/sh
       - -c
@@ -49,26 +90,27 @@ services:
       - NET_ADMIN
     networks:
       internal:
-        ipv4_address: 172.16.238.2
+        ipv4_address: 172.16.238.252
 
 
   dnsmasq-secondary:
     <<: *dnsmasq
     networks:
       internal:
-        ipv4_address: 172.16.238.3
+        ipv4_address: 172.16.238.251
 
 
   dns-troubleshoot:
     image: joffotron/docker-net-tools
     init: true
+    restart: always
     deploy:
       replicas: 0
     networks:
       - internal
     dns:
-      - 172.16.238.2
-      - 172.16.238.3
+      - 172.16.238.251
+      - 172.16.238.252
     depends_on:
       - dnsmasq
 
@@ -76,6 +118,7 @@ services:
   consul:
     image: 'consul:1.11.2'
     init: true
+    restart: always
     command: 'agent -datacenter docker -server -bootstrap-expect 1 -disable-host-node-id -client 0.0.0.0 -ui -data-dir /consul/data'
     healthcheck:
       test: ['CMD', '/bin/sh', '-c', 'curl -sfLo /dev/null http://127.0.0.1:8500/v1/health/node/$$HOSTNAME']
@@ -84,8 +127,8 @@ services:
     networks:
       - internal
     dns:
-      - 172.16.238.2
-      - 172.16.238.3
+      - 172.16.238.251
+      - 172.16.238.252
     volumes:
       - consul-leader:/consul/data
     depends_on:
@@ -95,6 +138,7 @@ services:
   consul-worker:
     image: 'consul:1.11.2'
     init: true
+    restart: always
     entrypoint: ''
     command:
       - /bin/sh
@@ -110,8 +154,8 @@ services:
     networks:
       - internal
     dns:
-      - 172.16.238.2
-      - 172.16.238.3
+      - 172.16.238.251
+      - 172.16.238.252
     depends_on:
       consul:
         condition: service_healthy
@@ -120,6 +164,7 @@ services:
   vault:
     image: 'vault:1.9.3'
     init: true
+    restart: always
     #exports work around vault bug https://github.com/hashicorp/vault/issues/3866
     #IP is the IP address of the default networking route
     #$$ escapes in "$" in docker-compose string interpolation
@@ -160,8 +205,8 @@ services:
     networks:
       - internal
     dns:
-      - 172.16.238.2
-      - 172.16.238.3
+      - 172.16.238.251
+      - 172.16.238.252
     depends_on:
       - consul-worker
 
@@ -169,13 +214,14 @@ services:
   portal:
     image: nginx
     init: true
+    restart: always
     deploy:
       replicas: 1
     networks:
       - internal
     dns:
-      - 172.16.238.2
-      - 172.16.238.3
+      - 172.16.238.251
+      - 172.16.238.252
     depends_on:
       - consul-worker
     volumes:
@@ -208,12 +254,13 @@ services:
     # https://github.com/serjs/socks5-server
     image: serjs/go-socks5-proxy
     init: true
+    restart: always
     ports:
       - "127.0.0.1:1080:1080"
     networks:
       - internal
     dns:
-      - 172.16.238.2
-      - 172.16.238.3
+      - 172.16.238.251
+      - 172.16.238.252
     depends_on:
       - dnsmasq
