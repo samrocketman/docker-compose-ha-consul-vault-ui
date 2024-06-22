@@ -9,4 +9,4 @@ set_vault_admin_token 1m
   --request PUT \
   http://active.vault.service.consul:8200/v1/sys/seal
 
-docker-compose stop vault
+docker compose stop vault

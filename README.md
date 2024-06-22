@@ -49,10 +49,10 @@ Supplemental reading material:
 ### Start the cluster
 
 > Remove `--scale vault=3` if you want to start one instance of Vault.
-> `docker-compose up -d` would bring only Consul up in HA configuration.
+> `docker compose up -d` would bring only Consul up in HA configuration.
 
     ./scripts/consul-agent.sh --bootstrap
-    docker-compose up --scale vault=3 -d
+    docker compose up --scale vault=3 -d
 
 ### Configure your web browser
 
@@ -117,7 +117,7 @@ repository after you initialize Vault.
 
 ### Other portal services
 
-For playing around with service discovery I have created other docker-compose
+For playing around with service discovery I have created other docker compose
 files which will automatically register with this consul cluster.  Here's a list
 of what I have created so far.
 
@@ -136,7 +136,7 @@ minor disruptions.
 Consul can be scaled up on the fly.  `consul-template` will automatically update
 dnsmasq to include new services.  dnsmasq will experience zero downtime.
 
-    docker-compose up --scale vault=3 --scale consul-worker=6 -d
+    docker compose up --scale vault=3 --scale consul-worker=6 -d
 
 To play with failover for killing consul instances, it is recommended to review
 [fault tolerance for consul HA deployments][ft].
@@ -144,7 +144,7 @@ To play with failover for killing consul instances, it is recommended to review
 # Starting and stopping
 
 Because high availability clusters have to gossip across nodes you can't execute
-a simple `docker-compose down` without corrupting the clusters.  Instead, you
+a simple `docker compose down` without corrupting the clusters.  Instead, you
 have to gracefully shut down all clusters that depend on consul and then
 gracefully shutdown consul itself.  For this, I have provided a script.
 
@@ -154,7 +154,7 @@ Stop consul and vault cluster safely.
 
 Start the consul and vault clusters.
 
-    docker-compose up -d
+    docker compose up -d
 
 # Troubleshooting
 
@@ -162,11 +162,11 @@ Start the consul and vault clusters.
 
 Currently, output from the `dnsmasq` and `dnsmasq-secondary` servers are
 minimal.  Verbosity of output can be increased for troubleshooting.  Edit
-`docker-compose.yml` and add `--log-queries` to the dnsmasq command.
+`docker compose.yml` and add `--log-queries` to the dnsmasq command.
 
 DNS client troubleshooting using Docker.
 
-    docker-compose run dns-troubleshoot
+    docker compose run dns-troubleshoot
 
 Using the `dig` command inside of the container.
 
@@ -184,7 +184,7 @@ Using the `dig` command inside of the container.
 
 View vault logs.
 
-    docker-compose logs vault
+    docker compose logs vault
 
 User `docker exec` to log into container names.  It allows you to poke around
 the runtime of the container.
@@ -206,11 +206,11 @@ possible you have a backup in the `backups/` directory.
 If you're in this leaderless state, then wipe out your old cluster data with the
 following command (this will permanently delete all old data).
 
-    docker-compose down -v
+    docker compose down -v
 
 Start a new cluster.
 
-    docker-compose up -d
+    docker compose up -d
 
 The latest backup can be restored via the following script.
 

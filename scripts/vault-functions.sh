@@ -37,7 +37,7 @@ function get_infra_token() (
 )
 
 function revoke_self() (
-  execute_vault_command vault token revoke -self >&2
+  execute_vault_command vault token revoke -self >&2 | xargs echo
 )
 
 # UTILITY FUNCTIONS
@@ -45,7 +45,7 @@ function revoke_self() (
 function execute_vault_command() (
   if vault_git_dir_available; then
     cd_vault
-    docker-compose exec -Te VAULT_TOKEN vault "$@"
+    docker compose exec -Te VAULT_TOKEN vault "$@"
   else
     "$@"
   fi

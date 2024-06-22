@@ -1,6 +1,3 @@
-version: '2.2'
-
-
 volumes:
   consul-leader:
 
@@ -65,7 +62,8 @@ services:
   dns-troubleshoot:
     image: joffotron/docker-net-tools
     init: true
-    scale: 0
+    deploy:
+      replicas: 0
     networks:
       - internal
     dns:
@@ -76,12 +74,13 @@ services:
 
 
   consul:
-    image: 'consul'
+    image: 'consul:1.11.2'
     init: true
     command: 'agent -datacenter docker -server -bootstrap-expect 1 -disable-host-node-id -client 0.0.0.0 -ui -data-dir /consul/data'
     healthcheck:
       test: ['CMD', '/bin/sh', '-c', 'curl -sfLo /dev/null http://127.0.0.1:8500/v1/health/node/$$HOSTNAME']
-    scale: 1
+    deploy:
+      replicas: 1
     networks:
       - internal
     dns:
@@ -94,7 +93,7 @@ services:
 
 
   consul-worker:
-    image: 'consul'
+    image: 'consul:1.11.2'
     init: true
     entrypoint: ''
     command:
@@ -106,7 +105,8 @@ services:
         until apk add bind-tools; do sleep 3; done
         until dig +short consul.service.consul; do sleep 1; done
         docker-entrypoint.sh agent -datacenter docker -server -join consul.service.consul -disable-host-node-id -client 0.0.0.0 -ui
-    scale: 2
+    deploy:
+      replicas: 2
     networks:
       - internal
     dns:
@@ -118,7 +118,7 @@ services:
 
 
   vault:
-    image: 'vault'
+    image: 'vault:1.9.3'
     init: true
     #exports work around vault bug https://github.com/hashicorp/vault/issues/3866
     #IP is the IP address of the default networking route
@@ -132,7 +132,8 @@ services:
         export VAULT_API_ADDR="http://$${IP}:8200" VAULT_CLUSTER_ADDR="https://$${IP}:8201"
         exec vault server -config=/vault/config
     #set scale: 3 for HA configuration
-    scale: 1
+    deploy:
+      replicas: 1
     environment:
       VAULT_ADDR: 'http://127.0.0.1:8200'
       VAULT_LOCAL_CONFIG: >-
@@ -168,7 +169,8 @@ services:
   portal:
     image: nginx
     init: true
-    scale: 1
+    deploy:
+      replicas: 1
     networks:
       - internal
     dns:

@@ -8,4 +8,4 @@ set_vault_addr
 set_vault_admin_token
 trap 'revoke_self' EXIT
 
-docker-compose exec -e VAULT_TOKEN -e VAULT_ADDR vault /bin/sh
+docker compose exec -e VAULT_TOKEN -e VAULT_ADDR vault /bin/sh

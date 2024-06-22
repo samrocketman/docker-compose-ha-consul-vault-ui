@@ -1,6 +1,11 @@
 #!/bin/bash
 
 set -e
+
+if ( ! type -P gawk && type -P awk ) &> /dev/null; then
+  function gawk() { awk "$@"; }
+fi
+
 function get-secret-txt() {
   if [ -r secret.txt ]; then
     cat secret.txt
@@ -14,4 +19,4 @@ function get-secret-txt() {
 VAULT_TOKEN="$(get-secret-txt | gawk '$0 ~ /Initial Root Token/ { print $NF;exit }')"
 [ -n "$VAULT_TOKEN" ]
 export VAULT_TOKEN
-docker-compose exec -Te VAULT_TOKEN vault vault policy write admin - < policies/admin.hcl
+docker compose exec -Te VAULT_TOKEN vault vault policy write admin - < policies/admin.hcl

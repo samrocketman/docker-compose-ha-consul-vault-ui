@@ -2,13 +2,17 @@
 
 set -e
 
-run=(docker-compose exec -T)
+if ( ! type -P gawk && type -P awk ) &> /dev/null; then
+  function gawk() { awk "$@"; }
+fi
+
+run=(docker compose exec -T)
 
 until "${run[@]}" consul consul catalog services | grep -- '^vault$' > /dev/null; do
   sleep 3
 done
 
-count=$(docker-compose exec -T consul consul catalog nodes -service=vault | wc -l)
+count=$(docker compose exec -T consul consul catalog nodes -service=vault | wc -l)
 ((count=count-1))
 
 function write-secret-txt() {
