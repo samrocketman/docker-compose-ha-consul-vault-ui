@@ -34,7 +34,14 @@ download() {
     return
   fi
   (
-    zip_file="$1"_"$2"_linux_amd64.zip
+    if [ "$(arch)" = aarch64 ]; then
+      zip_file="$1"_"$2"_linux_arm64.zip
+    elif [ "$(arch)" = x86_64 ]; then
+      zip_file="$1"_"$2"_linux_amd64.zip
+    else
+      echo 'Unknown CPU architecture: '"$(arch)"
+      exit 1
+    fi
     if [ -z "$3" ]; then
       cd "$bin_path"
     else
@@ -54,9 +61,17 @@ download() {
 }
 
 download_jq() {
-  jq_version='1.6'
+  jq_version='1.7.1'
   # SHA-256 hash
-  jq_hash='af986793a515d500ab2d35f8d2aecd656e764504b789b66d7e1a0b727a124c44'
+  if [ "$(arch)" = aarch64 ]; then
+    jq_bin=jq-linux-arm64
+  elif [ "$(arch)" = x86_64 ]; then
+    jq_bin=jq-linux-amd64
+  else
+    echo 'Unknown CPU architecture: '"$(arch)"
+    exit 1
+  fi
+  jq_hash="$(curl -sSfL https://github.com/jqlang/jq/releases/download/jq-"$jq_version"/sha256sum.txt | awk -v bin="$jq_bin" '$2 == bin { print $1; exit;}')"
   if [ ! "$1" = "./" ] && type jq || [ -f jq ]; then
     return
   fi
@@ -66,7 +81,7 @@ download_jq() {
     fi
     until echo "${jq_hash}  jq" | checksum -c -; do
       curl -Lo jq \
-        https://github.com/stedolan/jq/releases/download/jq-"${jq_version}"/jq-linux64
+        https://github.com/stedolan/jq/releases/download/jq-"${jq_version}"/"$jq_bin"
       chmod 755 jq
       sleep 3
     done
@@ -257,9 +272,9 @@ if [ "${is_root_user}" = true ]; then
   fi
 
   # start consul agent
-  su -s /bin/sh -c "nohup consul agent -datacenter $datacenter -retry-join $consul_host -config-dir=$consul_prefix/config -data-dir=$consul_prefix/data $additional_opts &" - consul
+  su -s /bin/sh -c "nohup consul agent -datacenter $datacenter -join $consul_host -config-dir=$consul_prefix/config -data-dir=$consul_prefix/data $additional_opts &" - consul
 else
   # start non-root consul agent
-  /bin/sh -c "exec nohup consul agent -datacenter $datacenter -retry-join $consul_host -config-dir=$consul_prefix/config -data-dir=$consul_prefix/data &"
+  /bin/sh -c "exec nohup consul agent -datacenter $datacenter -join $consul_host -config-dir=$consul_prefix/config -data-dir=$consul_prefix/data &"
 fi
 

@@ -1,7 +1,13 @@
 volumes:
   consul-leader:
+  consul-worker-1:
+  consul-worker-2:
   etc-pihole:
   etc-pihole-dnsmasq:
+  vault-file:
+  vault-logs:
+  dnsmasq-1:
+  dnsmasq-2:
 
 
 #define internal docker networks for container connectivity
@@ -19,17 +25,21 @@ services:
   # ad-blocking DNS service
   pihole:
     image: pihole/pihole:latest
-    restart: always
     entrypoint: ''
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
     command:
       - /bin/bash
-      - -exc
+      - -xc
       - |
         IP="$$(awk '/32 host/ && f ~ /172.16.238/ { print f; exit }; {f=$$2}' /proc/net/fib_trie)"
+        until curl -sSfIo /dev/null http://consul:8500/ui/; do sleep 1;done
         consul-agent.sh \
           --consul-host consul \
           --advertise "$$IP" \
-          --service '{"service": {"name": "pihole", "tags": ["portal"], "port": 80, "meta": {"title": "Pi-hole", "description": "A <a href=https://github.com/pi-hole/docker-pi-hole>dockerized DNS server</a> which blocks ads with a web interface."}}}'
+          --service '{"checks": [{"id": "http", "name": "PiHole IU available on port 80", "http": "http://0.0.0.0/admin/login.php", "interval": "10s", "status": "passing" }], "service": {"name": "pihole", "tags": ["portal"], "port": 80, "meta": {"title": "Pi-hole", "description": "A <a href=https://github.com/pi-hole/docker-pi-hole>dockerized DNS server</a> which blocks ads with a web interface."}}}'
         exec /s6-init
     # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
     #ports:
@@ -47,18 +57,28 @@ services:
       - ./scripts/consul-agent.sh:/bin/consul-agent.sh
       - 'etc-pihole:/etc/pihole'
       - 'etc-pihole-dnsmasq:/etc/dnsmasq.d'
-    depends_on:
-      - consul-worker
     networks:
       internal:
-        ipv4_address: 172.16.238.253
+        ipv4_address: 172.16.238.250
   #create a DNS service which also forwards lookups to consul DNS
   dnsmasq: &dnsmasq
-    image: storytel/dnsmasq
+    build:
+      network: host
+      context: .
+      dockerfile_inline: |
+        FROM alpine
+        RUN apk --no-cache add dnsmasq \
+          && echo "conf-dir=/etc/dnsmasq,*.conf" > /etc/dnsmasq.conf
+        EXPOSE 53/tcp 53/udp
+        #VOLUME ["/etc/dnsmasq"]
+        CMD ["dnsmasq"]
     init: true
-    restart: always
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
     dns:
-      - 172.16.238.253
+      - 172.16.238.250
     command:
       - /bin/sh
       - -c
@@ -86,6 +106,7 @@ services:
       - ./consul:/usr/local/bin/consul
       - ./jq:/usr/local/bin/jq
       - ./scripts/consul-agent.sh:/bin/consul-agent.sh
+      - dnsmasq-1:/etc/dnsmasq
     cap_add:
       - NET_ADMIN
     networks:
@@ -95,6 +116,12 @@ services:
 
   dnsmasq-secondary:
     <<: *dnsmasq
+    volumes:
+      - ./consul-template:/usr/local/bin/consul-template
+      - ./consul:/usr/local/bin/consul
+      - ./jq:/usr/local/bin/jq
+      - ./scripts/consul-agent.sh:/bin/consul-agent.sh
+      - dnsmasq-2:/etc/dnsmasq
     networks:
       internal:
         ipv4_address: 172.16.238.251
@@ -119,13 +146,13 @@ services:
     image: 'consul:1.11.2'
     init: true
     restart: always
-    command: 'agent -datacenter docker -server -bootstrap-expect 1 -disable-host-node-id -client 0.0.0.0 -ui -data-dir /consul/data'
+    command: 'agent -datacenter docker -server -bootstrap-expect 3 -disable-host-node-id -client 0.0.0.0 -ui -data-dir /consul/data'
     healthcheck:
       test: ['CMD', '/bin/sh', '-c', 'curl -sfLo /dev/null http://127.0.0.1:8500/v1/health/node/$$HOSTNAME']
     deploy:
       replicas: 1
-    networks:
-      - internal
+      restart_policy:
+        condition: any
     dns:
       - 172.16.238.251
       - 172.16.238.252
@@ -133,38 +160,39 @@ services:
       - consul-leader:/consul/data
     depends_on:
       - dnsmasq
+    networks:
+      internal:
+        ipv4_address: 172.16.238.249
 
 
-  consul-worker:
+  consul-worker-1: &consul-worker
     image: 'consul:1.11.2'
     init: true
-    restart: always
-    entrypoint: ''
-    command:
-      - /bin/sh
-      - -c
-      - |
-        set -ex
-        until apk update; do sleep 3; done
-        until apk add bind-tools; do sleep 3; done
-        until dig +short consul.service.consul; do sleep 1; done
-        docker-entrypoint.sh agent -datacenter docker -server -join consul.service.consul -disable-host-node-id -client 0.0.0.0 -ui
+    command: 'agent -datacenter docker -server -join consul -disable-host-node-id -client 0.0.0.0 -ui -data-dir /consul/data'
+    volumes:
+      - consul-worker-1:/consul/data
     deploy:
-      replicas: 2
-    networks:
-      - internal
+      replicas: 1
+      restart_policy:
+        condition: any
     dns:
       - 172.16.238.251
       - 172.16.238.252
-    depends_on:
-      consul:
-        condition: service_healthy
+    networks:
+      internal:
+        ipv4_address: 172.16.238.248
+  consul-worker-2:
+    <<: *consul-worker
+    volumes:
+      - consul-worker-2:/consul/data
+    networks:
+      internal:
+        ipv4_address: 172.16.238.247
 
 
   vault:
     image: 'vault:1.9.3'
     init: true
-    restart: always
     #exports work around vault bug https://github.com/hashicorp/vault/issues/3866
     #IP is the IP address of the default networking route
     #$$ escapes in "$" in docker-compose string interpolation
@@ -179,6 +207,11 @@ services:
     #set scale: 3 for HA configuration
     deploy:
       replicas: 1
+      restart_policy:
+        condition: any
+    volumes:
+      - vault-file:/vault/file
+      - vault-logs:/vault/logs
     environment:
       VAULT_ADDR: 'http://127.0.0.1:8200'
       VAULT_LOCAL_CONFIG: >-
@@ -203,27 +236,33 @@ services:
     cap_add:
       - IPC_LOCK
     networks:
-      - internal
+      internal:
+        ipv4_address: 172.16.238.246
     dns:
       - 172.16.238.251
       - 172.16.238.252
     depends_on:
-      - consul-worker
+      - consul-worker-1
+      - consul-worker-2
+      - consul
 
 
   portal:
     image: nginx
     init: true
-    restart: always
     deploy:
       replicas: 1
+      restart_policy:
+        condition: any
     networks:
       - internal
     dns:
       - 172.16.238.251
       - 172.16.238.252
     depends_on:
-      - consul-worker
+      - consul-worker-1
+      - consul-worker-2
+      - consul
     volumes:
       - ./consul-template:/usr/local/bin/consul-template
       - ./templates/nginx.conf:/nginx.conf
@@ -233,16 +272,16 @@ services:
       - ./scripts/consul-agent.sh:/bin/consul-agent.sh
     command:
       - /bin/sh
-      - -c
+      - -cx
       - |
         # this command will automatically register the portal app as a consul service
-        set -ex
         type curl || (
           until apt-get update; do sleep 3; done
           until apt-get -y --no-install-recommends install unzip curl ca-certificates procps less vim; do sleep 3; done
         )
         curl -fLo /usr/share/nginx/html/stylesheet.css https://raw.githubusercontent.com/samrocketman/jervis-api/gh-pages/1.6/stylesheet.css
         curl -fLo ~/.vimrc https://raw.githubusercontent.com/samrocketman/home/master/dotfiles/.vimrc
+        until curl -sSfIo /dev/null http://consul:8500/ui/; do sleep 1;done
         consul-agent.sh --service '{"service": {"name": "portal", "tags": [], "port": 80}}' \
           --consul-template-file-cmd /nginx.conf nginx.tpl /etc/nginx/conf.d/default.conf "consul lock -name service/portal -shell=false reload nginx -s reload" \
           --consul-template-file /index.html index.html.tpl /usr/share/nginx/html/index.html
@@ -255,6 +294,10 @@ services:
     image: serjs/go-socks5-proxy
     init: true
     restart: always
+    deploy:
+      replicas: 0
+      restart_policy:
+        condition: any
     ports:
       - "127.0.0.1:1080:1080"
     networks:
