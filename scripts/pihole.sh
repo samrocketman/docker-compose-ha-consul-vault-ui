@@ -5,6 +5,11 @@
 # Linux 6.5.0-41-generic x86_64
 # GNU bash, version 5.1.16(1)-release (x86_64-pc-linux-gnu)
 
+pihole_docker_exec=( docker compose exec -T pihole )
+if [ -f .env ]; then
+  source .env
+fi
+
 # $1=domain $2=comment $3=0|1 ($3 optional; default 1)
 sqlgen() {
   echo "INSERT OR IGNORE INTO adlist (address, comment) VALUES ('$1', '${2:-}');"
@@ -51,7 +56,7 @@ https://raw.githubusercontent.com/Spam404/lists/master/main-blacklist.txt
 https://raw.githubusercontent.com/AssoEchap/stalkerware-indicators/master/generated/hosts
 https://urlhaus.abuse.ch/downloads/hostfile/
 EOL
-} | docker compose exec -T pihole sqlite3 /etc/pihole/gravity.db
+} | "${pihole_docker_exec[@]}" sqlite3 /etc/pihole/gravity.db
 }
 
 
@@ -63,10 +68,10 @@ EOL
 whitelist_url='https://raw.githubusercontent.com/anudeepND/whitelist/master/domains/whitelist.txt'
 curl -sSfL "$whitelist_url" | \
   grep -vF youtube | \
-  docker compose exec -T pihole xargs -n1 -- pihole -w
+  "${pihole_docker_exec[@]}" xargs -n1 -- pihole -w
 
 # create block lists
 createAdlistConfig
 
 # refresh DNS blocking with above updates
-docker compose exec pihole pihole updateGravity
+"${pihole_docker_exec[@]}" pihole updateGravity
