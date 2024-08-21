@@ -67,7 +67,6 @@ EOL
 # create allow list so that aggressive block lists don't interfere with services
 whitelist_url='https://raw.githubusercontent.com/anudeepND/whitelist/master/domains/whitelist.txt'
 curl -sSfL "$whitelist_url" | \
-  grep -vF youtube | \
   "${pihole_docker_exec[@]}" xargs -n1 -- pihole -w
 
 # create block lists
