@@ -60,7 +60,7 @@
       <table class="example">
         <tbody>
           <tr><th>Link to service</th><th>Description</th></tr>{{ range (index (services | byTag) "portal") }}{{ $name := .Name }}{{$service := service .Name}}{{if $service}}{{scratch.Set "active" "true"}}
-          {{range $service}}{{with (index .ServiceMeta)}}<tr><td><a href="{{$name}}/">{{.title}}</a></td><td>{{.description}}</td>{{end}}{{end}}{{end}}{{end}}{{if eq ( scratch.Get "active" ) "false"}}
+          {{range $service}}{{with (index .ServiceMeta)}}<tr><td><a href="{{if "url" | in . }}{{.url}}{{else}}{{$name}}{{end}}/">{{.title}}</a></td><td>{{.description}}</td>{{end}}{{end}}{{end}}{{end}}{{if eq ( scratch.Get "active" ) "false"}}
           <tr><td>N/A</td><td>No portal services registered.</td></tr>{{end}}
         </tbody>
       </table>

@@ -39,8 +39,8 @@ services:
         consul-agent.sh \
           --consul-host consul \
           --advertise "$$IP" \
-          --service '{"checks": [{"id": "http", "name": "PiHole IU available on port 80", "http": "http://0.0.0.0/admin/login.php", "interval": "10s", "status": "passing" }], "service": {"name": "pihole", "tags": ["portal"], "port": 80, "meta": {"title": "Pi-hole", "description": "A <a href=https://github.com/pi-hole/docker-pi-hole>dockerized DNS server</a> which blocks ads with a web interface."}}}'
-        exec /s6-init
+          --service '{"checks": [{"id": "http", "name": "PiHole IU available on port 80", "http": "http://0.0.0.0/admin/login", "interval": "10s", "status": "passing" }], "service": {"name": "pihole", "tags": ["portal"], "port": 80, "meta": {"title": "Pi-hole", "description": "A <a href=https://github.com/pi-hole/docker-pi-hole>dockerized DNS server</a> which blocks ads with a web interface.", "url": "http://pihole.service.consul/admin"}}}'
+        exec start.sh
     # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
     #ports:
     #  - "53:53/tcp"
@@ -52,9 +52,9 @@ services:
       TZ: "${PIHOLE_TZ:-America/New_York}"
       WEBPASSWORD: "${PIHOLE_WEBPASSWORD:-}"
     volumes:
-      - ./consul:/usr/local/bin/consul
-      - ./jq:/usr/local/bin/jq
-      - ./scripts/consul-agent.sh:/bin/consul-agent.sh
+      - ./consul:/usr/local/bin/consul:ro
+      - ./jq:/usr/local/bin/jq:ro
+      - ./scripts/consul-agent.sh:/bin/consul-agent.sh:ro
       - 'etc-pihole:/etc/pihole'
       - 'etc-pihole-dnsmasq:/etc/dnsmasq.d'
     networks:
@@ -70,7 +70,6 @@ services:
         RUN apk --no-cache add dnsmasq \
           && echo "conf-dir=/etc/dnsmasq,*.conf" > /etc/dnsmasq.conf
         EXPOSE 53/tcp 53/udp
-        #VOLUME ["/etc/dnsmasq"]
         CMD ["dnsmasq"]
     init: true
     deploy:
@@ -102,10 +101,10 @@ services:
           dnsmasq --no-daemon --server=/consul/"$${CONSUL_IP}"#8600
         done
     volumes:
-      - ./consul-template:/usr/local/bin/consul-template
-      - ./consul:/usr/local/bin/consul
-      - ./jq:/usr/local/bin/jq
-      - ./scripts/consul-agent.sh:/bin/consul-agent.sh
+      - ./consul-template:/usr/local/bin/consul-template:ro
+      - ./consul:/usr/local/bin/consul:ro
+      - ./jq:/usr/local/bin/jq:ro
+      - ./scripts/consul-agent.sh:/bin/consul-agent.sh:ro
       - dnsmasq-1:/etc/dnsmasq
     cap_add:
       - NET_ADMIN
@@ -117,29 +116,14 @@ services:
   dnsmasq-secondary:
     <<: *dnsmasq
     volumes:
-      - ./consul-template:/usr/local/bin/consul-template
-      - ./consul:/usr/local/bin/consul
-      - ./jq:/usr/local/bin/jq
-      - ./scripts/consul-agent.sh:/bin/consul-agent.sh
+      - ./consul-template:/usr/local/bin/consul-template:ro
+      - ./consul:/usr/local/bin/consul:ro
+      - ./jq:/usr/local/bin/jq:ro
+      - ./scripts/consul-agent.sh:/bin/consul-agent.sh:ro
       - dnsmasq-2:/etc/dnsmasq
     networks:
       internal:
         ipv4_address: 172.16.238.251
-
-
-  dns-troubleshoot:
-    image: joffotron/docker-net-tools
-    init: true
-    restart: always
-    deploy:
-      replicas: 0
-    networks:
-      - internal
-    dns:
-      - 172.16.238.251
-      - 172.16.238.252
-    depends_on:
-      - dnsmasq
 
 
   consul:
@@ -264,12 +248,12 @@ services:
       - consul-worker-2
       - consul
     volumes:
-      - ./consul-template:/usr/local/bin/consul-template
-      - ./templates/nginx.conf:/nginx.conf
-      - ./templates/index.html:/index.html
-      - ./consul:/usr/local/bin/consul
-      - ./jq:/usr/local/bin/jq
-      - ./scripts/consul-agent.sh:/bin/consul-agent.sh
+      - ./consul-template:/usr/local/bin/consul-template:ro
+      - ./templates/nginx.conf:/nginx.conf:ro
+      - ./templates/index.html:/index.html:ro
+      - ./consul:/usr/local/bin/consul:ro
+      - ./jq:/usr/local/bin/jq:ro
+      - ./scripts/consul-agent.sh:/bin/consul-agent.sh:ro
     command:
       - /bin/sh
       - -cx
@@ -279,8 +263,12 @@ services:
           until apt-get update; do sleep 3; done
           until apt-get -y --no-install-recommends install unzip curl ca-certificates procps less vim; do sleep 3; done
         )
-        curl -fLo /usr/share/nginx/html/stylesheet.css https://raw.githubusercontent.com/samrocketman/jervis-api/gh-pages/1.6/stylesheet.css
-        curl -fLo ~/.vimrc https://raw.githubusercontent.com/samrocketman/home/master/dotfiles/.vimrc
+        until {
+            curl -sSfLo /usr/share/nginx/html/stylesheet.css https://raw.githubusercontent.com/samrocketman/jervis-api/gh-pages/1.6/stylesheet.css
+          }; do sleep 1; done
+        until {
+            curl -fLo ~/.vimrc https://raw.githubusercontent.com/samrocketman/home/master/dotfiles/.vimrc
+          }; do sleep 1; done
         until curl -sSfIo /dev/null http://consul:8500/ui/; do sleep 1;done
         consul-agent.sh --service '{"service": {"name": "portal", "tags": [], "port": 80}}' \
           --consul-template-file-cmd /nginx.conf nginx.tpl /etc/nginx/conf.d/default.conf "consul lock -name service/portal -shell=false reload nginx -s reload" \
@@ -295,11 +283,26 @@ services:
     init: true
     restart: always
     deploy:
-      replicas: 0
+      replicas: 1
       restart_policy:
         condition: any
     ports:
       - "127.0.0.1:1080:1080"
+    networks:
+      - internal
+    dns:
+      - 172.16.238.251
+      - 172.16.238.252
+    depends_on:
+      - dnsmasq
+
+
+  dns-troubleshoot:
+    image: joffotron/docker-net-tools
+    init: true
+    restart: always
+    deploy:
+      replicas: 0
     networks:
       - internal
     dns:

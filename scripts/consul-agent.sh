@@ -9,7 +9,7 @@ set -ex
 # VARIABLES
 #
 AGENT_VERSION='1.11.2'
-TEMPLATE_VERSION='0.27.2'
+TEMPLATE_VERSION='0.40.0'
 VAULT_VERSION='1.9.3'
 consul_host=consul
 
@@ -264,7 +264,7 @@ if [ "${is_root_user}" = true ]; then
     addgroup --system --gid 8000 consul
     adduser --system --uid 8000 --ingroup consul --home "$consul_prefix" consul
   fi
-  chown -R consul. "$consul_prefix"
+  chown -R 8000:8000 "$consul_prefix"
 
   additional_opts=""
   if [ -n "$advertise_address" ]; then
